@@ -1,4 +1,4 @@
-package com.teamcocoon.QuizzyAPI.config;
+package com.teamcocoon.QuizzyAPI.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
