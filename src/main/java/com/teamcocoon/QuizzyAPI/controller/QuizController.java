@@ -2,6 +2,7 @@ package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
+import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -30,7 +31,14 @@ public class QuizController {
     }
 
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@RequestBody Quiz quiz){
+    public ResponseEntity<Void> createQuiz(@RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
+        String uid = jwt.getClaim("sub");
+
+        User user = new User();
+        user.setUserId(uid);
+
+        quiz.setUser(user);
+
         Quiz savedQuiz = quizService.saveQuiz(quiz);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
