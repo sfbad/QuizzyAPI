@@ -18,8 +18,8 @@ public class User {
     @Id
     private String userId;
 
-    private String token;
     private String username;
+
     private String email;
-    private String password;
+
 }

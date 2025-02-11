@@ -15,7 +15,10 @@ public class Quiz{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long QuizId;
+
     private String QuizCode;
+
+    private String title;
 
     @ManyToOne
     private User user;

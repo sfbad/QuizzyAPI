@@ -15,8 +15,10 @@ public class Response {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long responseId;
-    private String description;
-    private boolean valid;
+
+    private String title;
+
+    private boolean isCorrect;
 
     @ManyToOne
     private Question question;

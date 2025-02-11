@@ -16,7 +16,8 @@ public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long questionId;
-    private String description;
+
+    private String title;
 
     @ManyToOne
     private Quiz quiz;
