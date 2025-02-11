@@ -22,5 +22,10 @@ public class GlobalExceptionHandler extends Exception{
     public ResponseEntity<?> entityNotFoundedException(EntityNotFoundedException e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(EntityAlreadyExists.class)
+    public ResponseEntity<?> entityAlreadyExists(EntityAlreadyExists e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
 
 }
