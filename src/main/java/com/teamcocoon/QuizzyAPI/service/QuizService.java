@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 @RequiredArgsConstructor
 public class QuizService {
 
+    @Autowired
     private final QuizRepository quizRepository;
 
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
@@ -30,5 +32,9 @@ public class QuizService {
         );
 
         return ResponseEntity.ok(listQuizResponseDto);
+    }
+
+    public Quiz saveQuiz(Quiz quiz) {
+        return quizRepository.save(quiz);
     }
 }
