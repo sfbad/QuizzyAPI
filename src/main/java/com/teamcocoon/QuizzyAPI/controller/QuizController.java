@@ -1,10 +1,12 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.PatchQuizTitleRequestDTO;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,4 +53,17 @@ public class QuizController {
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateQuizTitle(
+            @PathVariable Long id,
+            @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
+            @AuthenticationPrincipal Jwt jwtl) {
+
+        String username = jwtl.getClaim("sub");
+
+        quizService.updateQuizTitle(id, patchRequests, username);
+        return ResponseEntity.noContent().build();
+    }
+
 }
