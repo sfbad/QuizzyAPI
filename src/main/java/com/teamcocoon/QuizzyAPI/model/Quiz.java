@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Builder
 @NoArgsConstructor
@@ -20,6 +22,11 @@ public class Quiz{
 
     private String title;
 
+    private String description;
+
     @ManyToOne
     private User user;
+
+    @OneToMany(mappedBy = "quiz",fetch = FetchType.EAGER)
+    private List<Question> questions;
 }

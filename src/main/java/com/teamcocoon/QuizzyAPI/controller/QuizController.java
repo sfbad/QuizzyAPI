@@ -1,10 +1,12 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,6 @@ public class QuizController {
 
     @GetMapping()
     public ResponseEntity<ListQuizResponseDto> getListQuiz(@AuthenticationPrincipal Jwt jwt){
-        System.out.println("uid: " + jwt.getClaim("sub"));
         String uid = jwt.getClaim("sub");
         return quizService.getListQuizByUserId(uid);
     }
@@ -50,5 +51,12 @@ public class QuizController {
         headers.setLocation(location);
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<QuizResponseDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
+        String uid = jwt.getClaim("sub");
+        System.out.println("getQuizById : " + id);
+        return quizService.getQuizByIdAndUserId(id, uid);
     }
 }
