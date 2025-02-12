@@ -8,21 +8,21 @@ import com.teamcocoon.QuizzyAPI.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -35,7 +35,7 @@ class UserControllerTest {
     private MockMvc mockMvc;
     @Mock
     private UserRepository userRepository;
-    @InjectMocks
+    @MockitoBean
     private UserService userService;
 
     private Jwt jwt;
@@ -56,7 +56,8 @@ class UserControllerTest {
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
+                        .content(objectMapper.writeValueAsString(requestDto))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isCreated());
     }
 
@@ -67,7 +68,8 @@ class UserControllerTest {
 
         when(userService.getUserData(any(Jwt.class))).thenReturn(responseDto);
 
-        mockMvc.perform(get("/api/users/me"))
+        mockMvc.perform(get("/api/users/me")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uid").value("12345"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
