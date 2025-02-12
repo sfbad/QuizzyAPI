@@ -1,4 +1,6 @@
 package com.teamcocoon.QuizzyAPI.dtos;
 
-public class QuestionDto {
+import com.teamcocoon.QuizzyAPI.model.User;
+
+public record QuestionDto (String title){
 }

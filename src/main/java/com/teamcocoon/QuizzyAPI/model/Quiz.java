@@ -27,6 +27,6 @@ public class Quiz{
     @ManyToOne
     private User user;
 
-    @OneToMany(mappedBy = "quiz")
+    @OneToMany(mappedBy = "quiz",fetch = FetchType.EAGER)
     private List<Question> questions;
 }
