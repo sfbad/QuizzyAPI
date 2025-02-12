@@ -49,3 +49,5 @@ build/
 # Other files
 .DS_Store
 Thumbs.db
+
+application-dev.properties
