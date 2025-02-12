@@ -1,10 +1,12 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
+import com.teamcocoon.QuizzyAPI.dtos.AddNewQuestionDTO;
 import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
 import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
@@ -58,5 +60,19 @@ public class QuizController {
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
+    }
+    @PostMapping("/{id}/questions")
+    public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @PathVariable Long id,@Valid @RequestBody AddNewQuestionDTO question){
+        System.out.println("addNewQuestion : " + question);
+        Long questionId = quizService.addQuestionToQuiz(id, question);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(questionId)
+                .toUri();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 }
