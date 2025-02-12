@@ -48,7 +48,10 @@ class QuizControllerTest {
         savedQuiz.setQuizId(1L);
         savedQuiz.setTitle("My title");
         savedQuiz.setDescription("My description");
-        savedQuiz.setUser(new User("user123"));
+        savedQuiz.setUser(User.builder()
+                        .username("username")
+                        .email("email@gmail.com")
+                .build());
 
         when(quizService.saveQuiz(any(Quiz.class))).thenReturn(savedQuiz);
 

@@ -2,6 +2,7 @@ package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.AddNewQuestionDTO;
 import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.PatchQuizTitleRequestDTO;
 import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
@@ -61,6 +62,19 @@ public class QuizController {
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateQuizTitle(
+            @PathVariable Long id,
+            @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
+            @AuthenticationPrincipal Jwt jwtl) {
+
+        String username = jwtl.getClaim("sub");
+
+        quizService.updateQuizTitle(id, patchRequests, username);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/questions")
     public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @PathVariable Long id,@Valid @RequestBody AddNewQuestionDTO question){
         System.out.println("addNewQuestion : " + question);
