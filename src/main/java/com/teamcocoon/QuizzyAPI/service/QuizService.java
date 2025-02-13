@@ -34,11 +34,11 @@ public class QuizService {
 
         ListQuizResponseDto listQuizResponseDto = new ListQuizResponseDto(
                 listQuiz.stream()
-                       .map(quiz -> QuizDto.builder()
-                               .id(quiz.getQuizId())
-                               .title(quiz.getTitle())
-                               .build())
-                       .collect(Collectors.toList())
+                        .map(quiz -> QuizDto.builder()
+                                .id(quiz.getQuizId())
+                                .title(quiz.getTitle())
+                                .build())
+                        .collect(Collectors.toList())
         );
 
         return ResponseEntity.ok(listQuizResponseDto);
@@ -77,9 +77,9 @@ public class QuizService {
     public Long addQuestionToQuiz(Long idQuiz, AddNewQuestionDTO questionDTO) {
         Quiz quizz = getQuizById(idQuiz);
         Question question = questionService.addQuestion(Question.builder()
-                            .title(questionDTO.title())
-                            .quiz(quizz)
-                            .build());
+                .title(questionDTO.title())
+                .quiz(quizz)
+                .build());
 
         questionDTO.answers().forEach(answer -> {
             Response response = Response.builder()
