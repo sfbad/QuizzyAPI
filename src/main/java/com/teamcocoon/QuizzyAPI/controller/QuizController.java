@@ -5,6 +5,7 @@ import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
+import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +25,7 @@ import java.util.List;
 public class QuizController {
 
     private final QuizService quizService;
+    private final UserService userService;
 
     @GetMapping()
     public ResponseEntity<ListQuizResponseDto> getListQuiz(@AuthenticationPrincipal Jwt jwt){
@@ -35,8 +37,7 @@ public class QuizController {
     public ResponseEntity<Void> createQuiz(@RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
         String uid = jwt.getClaim("sub");
 
-        User user = new User();
-        user.setUserId(uid);
+        User user = userService.getUserByUID(uid);
 
         quiz.setUser(user);
 
