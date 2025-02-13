@@ -5,19 +5,15 @@ import com.teamcocoon.QuizzyAPI.model.Question;
 import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.repositories.QuestionRepository;
 import com.teamcocoon.QuizzyAPI.repositories.ResponseRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final ResponseRepository responseRepository;
-
-    public QuestionService(QuestionRepository questionRepository, ResponseRepository responseRepository) {
-        this.questionRepository = questionRepository;
-
-        this.responseRepository = responseRepository;
-    }
 
     public Question addQuestion(Question question) {
        return questionRepository.save(question);

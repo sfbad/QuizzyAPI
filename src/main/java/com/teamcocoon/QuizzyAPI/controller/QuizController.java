@@ -67,11 +67,11 @@ public class QuizController {
     public ResponseEntity<Void> updateQuizTitle(
             @PathVariable Long id,
             @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
-            @AuthenticationPrincipal Jwt jwtl) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        String username = jwtl.getClaim("sub");
+        String uid = jwt.getClaim("sub");
 
-        quizService.updateQuizTitle(id, patchRequests, username);
+        quizService.updateQuizTitle(id, patchRequests, uid);
         return ResponseEntity.noContent().build();
     }
 

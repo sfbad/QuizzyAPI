@@ -77,11 +77,9 @@ public class QuizService {
     public Long addQuestionToQuiz(Long idQuiz, AddNewQuestionDTO questionDTO) {
         Quiz quizz = getQuizById(idQuiz);
         Question question = questionService.addQuestion(Question.builder()
-                           .title(questionDTO
-                                   .title()
-                                    )
-                           .build()
-                                            );
+                            .title(questionDTO.title())
+                            .quiz(quizz)
+                            .build());
 
         questionDTO.answers().forEach(answer -> {
             Response response = Response.builder()
@@ -97,9 +95,9 @@ public class QuizService {
         return question.getQuestionId();
     }
 
-    public void updateQuizTitle(Long id, List<PatchQuizTitleRequestDTO> patchQuizTitleRequestDTOS, String username) {
+    public void updateQuizTitle(Long id, List<PatchQuizTitleRequestDTO> patchQuizTitleRequestDTOS, String uid) {
         Quiz quiz = quizRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        User user = userRepository.findById(uid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (!quiz.getUser().getUserId().equals(user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz does not belong to user");
