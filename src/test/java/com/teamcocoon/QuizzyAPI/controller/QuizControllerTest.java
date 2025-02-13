@@ -65,7 +65,6 @@ class QuizControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(quiz)))
                 .andExpect(status().isCreated());
-
     }
 
     @Test
