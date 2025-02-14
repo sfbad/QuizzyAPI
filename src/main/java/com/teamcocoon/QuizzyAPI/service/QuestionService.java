@@ -38,8 +38,18 @@ public class QuestionService {
     }
 
     public void deleteAllByQuestion(Question question) {
-        responseRepository.deleteAllByQuestion(question);
+        responseRepository.deleteAllByQuestion(question.getQuestionId());
     }
+    public void deleteAllAnswers(Response response) {
+        responseRepository.delete(response);
+    }
+
+    public List<Response> getResponsesByQuestion(Long questionId) {
+
+        return responseRepository.findResponseByQuestion_QuestionId(questionId);
+
+    }
+
     public void updateQuestionTitle(Question question, String title)
     {
         Question updatedQuestion = getQuestionById(question.getQuestionId());

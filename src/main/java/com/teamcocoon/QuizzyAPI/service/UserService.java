@@ -27,6 +27,7 @@ public class UserService {
             throw new EntityAlreadyExists("Username already exists");
         }
 
+
         User user = new User();
         user.setUserId(uid);
         user.setUsername(username);

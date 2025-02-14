@@ -74,8 +74,7 @@ public class QuizService {
     }*/
 
     public ResponseEntity<ListQuestionsDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
-        System.out.println("idQuiz: " + idQuiz);
-
+        log.info("Recuperation du quizz : " + idQuiz);
         Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
                 .filter(q -> q.getUser().getUserId().equals(uid))
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
@@ -93,6 +92,7 @@ public class QuizService {
                                 .collect(Collectors.toList()))
                         .build())
                 .collect(Collectors.toList());
+        log.info("Envoie de la liste aves ces questions  : " + questionDtos);
 
         return ResponseEntity.ok(ListQuestionsDto.builder()
                 .title(quiz.getTitle())
@@ -120,9 +120,11 @@ public class QuizService {
                     .isCorrect(answer.isCorrect())
                     .build();
             questionService.addResponsesToQuestion(question.getQuestionId(), response);
+            question.getResponses().add(response);
         });
 
         quizz.getQuestions().add(question);
+
 
         quizRepository.save(quizz);
         return question.getQuestionId();
@@ -136,7 +138,10 @@ public class QuizService {
             throw new EntityNotFoundedException("Question does not belong to the specified quiz");
         }
         questionService.updateQuestionTitle(question, newTitle);
-        questionService.deleteAllByQuestion(question);
+        List<Response> responses = questionService.getResponsesByQuestion(questionId);
+        assert  responses != null;
+        responses.forEach(questionService::deleteAllAnswers);
+
         updatedAnswersDTOs.forEach(answer -> {
             Response response = Response.builder()
                     .title(answer.title())

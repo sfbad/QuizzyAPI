@@ -94,4 +94,13 @@ public class QuizController {
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
+    @PutMapping("/{quizId}/questions/{questionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateQuestion(@PathVariable Long quizId, @PathVariable Long questionId,
+                               @RequestBody @Valid AddNewQuestionDTO updateQuestionDTO) {
+
+        String newTitle = updateQuestionDTO.title();
+        quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
+    }
+
 }

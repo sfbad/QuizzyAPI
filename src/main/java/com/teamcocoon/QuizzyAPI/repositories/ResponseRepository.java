@@ -13,6 +13,7 @@ import java.util.List;
 public interface ResponseRepository extends JpaRepository<Response, Long> {
     @Modifying
     @Query("DELETE FROM Response r WHERE r.question.questionId = :questionId")
-    void deleteAllByQuestion(Question question);
+    void deleteAllByQuestion(Long questionId);
 
+    List<Response> findResponseByQuestion_QuestionId(Long questionId);
 }
