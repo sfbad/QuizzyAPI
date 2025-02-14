@@ -27,6 +27,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -115,5 +117,30 @@ class QuizControllerTest {
     }
 
 
+
+    @Test
+    void getQuiById() throws Exception {
+        QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
+        UserUtils.createUserIfNotExists("testUser");
+
+        MvcResult result = mockMvc.perform(post("/api/quiz")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(quiz)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        // Supposons que la réponse contienne l'ID du quiz créé, extraire l'ID
+        String location = result.getResponse().getHeader("Location");
+        Long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        mockMvc.perform(get("/api/quiz/{id}", quizId)
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Sample Quiz")) // Vérifie le titre du quiz
+                .andExpect(jsonPath("$.description").doesNotExist()) // Vérifie que la description est absente (si null)
+                .andExpect(jsonPath("$.questions").isArray());
+
+    }
 
 }
