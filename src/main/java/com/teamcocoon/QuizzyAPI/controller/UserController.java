@@ -30,12 +30,13 @@ public class UserController {
            @Valid @RequestBody UserRequestDto userRequestDto
             ) {
         String uid = jwt.getClaim("sub");
+        String email = jwt.getClaim("email");
         String username = userRequestDto.username();
         if (username == null || username.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
 
-        userService.registerUser(uid, username);
+        userService.registerUser(uid, username,email);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

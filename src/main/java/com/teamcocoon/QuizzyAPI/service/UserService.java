@@ -21,7 +21,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void registerUser(String uid, String username) {
+    public void registerUser(String uid, String username,String email) {
         Optional<User> existingUser = userRepository.findByUsername(username);
         if (existingUser.isPresent()) {
             throw new EntityAlreadyExists("Username already exists");
@@ -31,6 +31,7 @@ public class UserService {
         User user = new User();
         user.setUserId(uid);
         user.setUsername(username);
+        user.setEmail(email);
         userRepository.save(user);
     }
     public UserResponseDto getUserData(Jwt jwt) {

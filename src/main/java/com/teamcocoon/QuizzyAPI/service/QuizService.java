@@ -120,11 +120,12 @@ public class QuizService {
                     .isCorrect(answer.isCorrect())
                     .build();
             questionService.addResponsesToQuestion(question.getQuestionId(), response);
+            log.info("Ajout de la reponses   : " +response +" a la question : " + question);
             question.getResponses().add(response);
         });
 
         quizz.getQuestions().add(question);
-
+        questionService.saveQuestion(question);
 
         quizRepository.save(quizz);
         return question.getQuestionId();
