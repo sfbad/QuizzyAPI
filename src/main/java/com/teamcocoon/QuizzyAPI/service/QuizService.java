@@ -8,7 +8,10 @@ import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class QuizService {
 
+    private static final Logger log = LoggerFactory.getLogger(QuizService.class);
     @Autowired
     private final QuizRepository quizRepository;
     @Autowired
@@ -76,7 +80,7 @@ public class QuizService {
 
     public Long addQuestionToQuiz(Long idQuiz, AddNewQuestionDTO questionDTO) {
         Quiz quizz = getQuizById(idQuiz);
-        Question question = questionService.addQuestion(Question.builder()
+        Question question = questionService.saveQuestion(Question.builder()
                 .title(questionDTO.title())
                 .quiz(quizz)
                 .build());
@@ -93,6 +97,25 @@ public class QuizService {
 
         quizRepository.save(quizz);
         return question.getQuestionId();
+    }
+
+    public void updateQuestion(Long quizId, Long questionId, String newTitle, List<AnswersDTO> updatedAnswersDTOs) {
+        log.info("Updating question");
+        Quiz quiz = getQuizById(quizId);
+        Question   question = questionService.getQuestionById(questionId);
+        if (!question.getQuiz().equals(quiz)) {
+            throw new EntityNotFoundedException("Question does not belong to the specified quiz");
+        }
+        questionService.updateQuestionTitle(question, newTitle);
+        questionService.deleteAllByQuestion(question);
+        updatedAnswersDTOs.forEach(answer -> {
+            Response response = Response.builder()
+                    .title(answer.title())
+                    .isCorrect(answer.isCorrect())
+                    .build();
+            questionService.addResponsesToQuestion(questionId,response);
+        });
+        questionService.saveQuestion(question);
     }
 
     public void updateQuizTitle(Long id, List<PatchQuizTitleRequestDTO> patchQuizTitleRequestDTOS, String uid) {

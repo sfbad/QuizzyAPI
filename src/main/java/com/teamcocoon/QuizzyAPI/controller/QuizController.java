@@ -5,6 +5,7 @@ import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
 import com.teamcocoon.QuizzyAPI.dtos.PatchQuizTitleRequestDTO;
 import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
+import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -90,4 +92,15 @@ public class QuizController {
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
+
+    @PutMapping("/{quizId}/questions/{questionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateQuestion(@PathVariable Long quizId, @PathVariable Long questionId,
+            @RequestBody @Valid AddNewQuestionDTO updateQuestionDTO) {
+
+        String newTitle = updateQuestionDTO.title();
+        quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
+    }
+
+
 }
