@@ -51,7 +51,9 @@ class QuizControllerTest {
 
     private Jwt jwt;
     private ObjectMapper objectMapper = new ObjectMapper();
-
+    private  List<AnswersDTO>  answers = new ArrayList<>();
+    AnswersDTO answersDTO1 = new AnswersDTO("Paris",true);
+    AnswersDTO answersDTO2 = new AnswersDTO("Italie",false);
 
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
@@ -96,5 +98,22 @@ class QuizControllerTest {
                 .andExpect(jsonPath("$.data[0].title").value("New quizz1")) // Vérifie que le quiz attendu est dans la réponse
                 .andExpect(jsonPath("$.data[1].title").value("New quizz2"));
     }
+
+    @Test
+    void addNewQuestion_ShouldReturn_LocationUrl_For_The_CreatedQuestion() throws Exception {
+        createQuiz_returns201WithLocation();
+        answers.add(answersDTO1);
+        answers.add(answersDTO2);
+        AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
+
+        mockMvc.perform(post("/api/quiz/{quizId}/questions", 1L)
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(question)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "http://localhost/api/quiz/1/questions/1"));
+    }
+
+
 
 }
