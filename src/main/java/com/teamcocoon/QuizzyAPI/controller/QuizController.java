@@ -1,9 +1,6 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
-import com.teamcocoon.QuizzyAPI.dtos.AddNewQuestionDTO;
-import com.teamcocoon.QuizzyAPI.dtos.ListQuizResponseDto;
-import com.teamcocoon.QuizzyAPI.dtos.PatchQuizTitleRequestDTO;
-import com.teamcocoon.QuizzyAPI.dtos.QuizResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
@@ -57,12 +54,12 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    /*@GetMapping("/{id}")
     public ResponseEntity<QuizResponseDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
-    }
+    }*/
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
@@ -89,5 +86,12 @@ public class QuizController {
         headers.setLocation(location);
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
+        String uid = jwt.getClaim("sub");
+        System.out.println("getQuizById : " + id);
+        return quizService.getQuizByIdAndUserId(id, uid);
     }
 }
