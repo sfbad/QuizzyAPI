@@ -52,7 +52,7 @@ public class QuizService {
         return quizRepository.save(quiz);
     }
 
-    public ResponseEntity<QuizResponseDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
+   /* public ResponseEntity<QuizResponseDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
         System.out.println("idQuiz: " + idQuiz);
 
         Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
@@ -71,7 +71,36 @@ public class QuizService {
                 .description(quiz.getDescription())
                 .questions(questionDtos)
                 .build());
+    }*/
+
+    public ResponseEntity<ListQuestionsDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
+        System.out.println("idQuiz: " + idQuiz);
+
+        Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
+                .filter(q -> q.getUser().getUserId().equals(uid))
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        //System.out.println("Quiz title: " + quiz.getTitle());
+
+        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
+                .map(q -> QuestionAnswersDto.builder()
+                        .title(q.getTitle())
+                        .answers(q.getResponses().stream()
+                                .map(r -> AnswersDTO.builder()
+                                        .title(r.getTitle())
+                                        .isCorrect(r.isCorrect())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ListQuestionsDto.builder()
+                .title(quiz.getTitle())
+                .description(quiz.getDescription())
+                .questions(questionDtos)
+                .build());
     }
+
 
     public Quiz getQuizById(Long idQuiz) {
         return quizRepository.findById(idQuiz)

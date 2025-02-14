@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Builder
 @NoArgsConstructor
@@ -21,4 +23,7 @@ public class Question {
 
     @ManyToOne
     private Quiz quiz;
+
+    @OneToMany
+    private List<Response> responses;
 }
