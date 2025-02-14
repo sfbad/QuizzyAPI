@@ -76,11 +76,18 @@ public class QuizService {
                 .filter(q -> q.getUser().getUserId().equals(uid))
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
-        System.out.println("Quiz title: " + quiz.getTitle());
+        //System.out.println("Quiz title: " + quiz.getTitle());
 
-        // Transformer les questions en DTOs pour n'envoyer que le titre
-        List<QuestionDto> questionDtos = quiz.getQuestions().stream()
-                .map(q -> new QuestionDto(q.getTitle()))
+        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
+                .map(q -> QuestionAnswersDto.builder()
+                        .title(q.getTitle())
+                        .answers(q.getResponses().stream()
+                                .map(r -> AnswersDTO.builder()
+                                        .title(r.getTitle())
+                                        .isCorrect(r.isCorrect())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build())
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ListQuestionsDto.builder()
