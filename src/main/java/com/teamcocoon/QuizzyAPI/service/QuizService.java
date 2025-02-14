@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,24 +81,46 @@ public class QuizService {
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
         //System.out.println("Quiz title: " + quiz.getTitle());
+        List<Question> questions = quiz.getQuestions();
+        List<QuestionAnswersDto> questionDtoss = new ArrayList<>();
 
-        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
-                .map(q -> QuestionAnswersDto.builder()
-                        .title(q.getTitle())
-                        .answers(q.getResponses().stream()
-                                .map(r -> AnswersDTO.builder()
-                                        .title(r.getTitle())
-                                        .isCorrect(r.isCorrect())
-                                        .build())
-                                .collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-        log.info("Envoie de la liste aves ces questions  : " + questionDtos);
+
+        questions.forEach(question -> {
+            List<Response> responses = questionService.getResponsesByQuestion(question.getQuestionId());
+            List<AnswersDTO> answersDtos = new ArrayList<>();
+
+            responses.forEach(response -> {
+                AnswersDTO answersDTO = AnswersDTO.builder()
+                        .title(response.getTitle())
+                        .isCorrect(response.isCorrect())
+                        .build();
+                answersDtos.add(answersDTO);
+            });
+            QuestionAnswersDto questionAnswersDto = QuestionAnswersDto.builder()
+                    .title(question.getTitle())
+                    .answers(answersDtos)
+                    .build();
+
+            questionDtoss.add(questionAnswersDto);
+        });
+
+//        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
+//                .map(q -> QuestionAnswersDto.builder()
+//                        .title(q.getTitle())
+//                        .answers(q.getResponses().stream()
+//                                .map(r -> AnswersDTO.builder()
+//                                        .title(r.getTitle())
+//                                        .isCorrect(r.isCorrect())
+//                                        .build())
+//                                .collect(Collectors.toList()))
+//                        .build())
+//                .collect(Collectors.toList());
+        log.info("Envoie de la liste aves ces questions  : " + questionDtoss);
 
         return ResponseEntity.ok(ListQuestionsDto.builder()
                 .title(quiz.getTitle())
                 .description(quiz.getDescription())
-                .questions(questionDtos)
+                .questions(questionDtoss)
                 .build());
     }
 
