@@ -1,14 +1,17 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.util.Pair;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
+import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.utils.UserUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.TestPropertySource;
@@ -18,6 +21,10 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static com.teamcocoon.QuizzyAPI.utils.UserUtils.postToPathThenReturnData;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -154,6 +161,45 @@ class QuizControllerTest {
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("New Title"));
+    }
+
+    @Test
+    void testTest() throws Exception {
+        UserUtils.createUserIfNotExists("testUser");
+
+        Quiz quizRequest = new Quiz();
+        quizRequest.setTitle("Test Quiz");
+
+        Optional<Pair<QuizResponseDto, String>> result = postToPathThenReturnData(UserUtils.POST,
+                "/api/quiz", quizRequest, QuizResponseDto.class, true);
+
+        assertTrue(result.isPresent(), "La réponse ne doit pas être vide");
+
+        QuizResponseDto quizResponse = result.get().getLeft();
+        String headers = result.get().getRight();
+
+        assertNotNull(headers, "Les headers ne doivent pas être null");
+        assertNotNull(headers, "L'URL Location ne doit pas être null");
+        System.out.println("L'URI générée est : " + headers);
+        System.out.println("quizz response: " + quizResponse);
+    }
+    @Test
+    void testTestReturnListQuestionsDto() throws Exception {
+        //UserUtils.createUserIfNotExists("testUser");
+
+        createQuiz_returns201WithLocation();
+
+        Optional<Pair<ListQuizResponseDto, String>> result = postToPathThenReturnData(UserUtils.GET,
+                "/api/quiz", null, ListQuizResponseDto.class, false);
+
+        assertTrue(result.isPresent(), "La réponse ne doit pas être vide");
+
+        ListQuizResponseDto listQuizResponseDto = result.get().getLeft();
+        String headers = result.get().getRight();
+
+        assertNull(headers, "Les headers ne doivent pas être null");
+        System.out.println("L'URI générée est : " + headers);
+        System.out.println("quizz response: " + listQuizResponseDto);
     }
 
 }

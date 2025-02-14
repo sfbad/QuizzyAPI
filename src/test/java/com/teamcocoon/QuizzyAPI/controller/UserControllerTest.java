@@ -52,7 +52,7 @@ class UserControllerTest {
     void shouldRegisterUserSuccessfully() throws Exception {
         UserRequestDto requestDto = new UserRequestDto("testUser");
 
-        doNothing().when(userService).registerUser(any(String.class), any(String.class));
+        doNothing().when(userService).registerUser(any(String.class), any(String.class),any(String.class));
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
