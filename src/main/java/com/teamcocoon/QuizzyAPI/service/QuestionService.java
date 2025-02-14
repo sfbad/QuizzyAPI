@@ -38,7 +38,7 @@ public class QuestionService {
     }
 
     public void deleteAllByQuestion(Question question) {
-        responseRepository.deleteByQuestion(question);
+        responseRepository.deleteAllByQuestion(question);
     }
     public void updateQuestionTitle(Question question, String title)
     {
