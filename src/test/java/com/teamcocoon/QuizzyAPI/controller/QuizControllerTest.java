@@ -2,43 +2,26 @@ package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
-import com.teamcocoon.QuizzyAPI.dtos.AddNewQuestionDTO;
-import com.teamcocoon.QuizzyAPI.dtos.AnswersDTO;
-import com.teamcocoon.QuizzyAPI.dtos.QuizDto;
-import com.teamcocoon.QuizzyAPI.dtos.UserRequestDto;
-import com.teamcocoon.QuizzyAPI.model.Quiz;
-import com.teamcocoon.QuizzyAPI.model.User;
-import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
-import com.teamcocoon.QuizzyAPI.service.QuizService;
+import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.utils.UserUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -88,16 +71,16 @@ class QuizControllerTest {
 
     @Test
     void getListQuiz_returnsListOfQuizzes() throws Exception {
-        // Arrange: Créer un quiz pour un utilisateur donné
+        //créer un quiz pour un utilisateur
         createQuiz_returns201WithLocation();
         createQuiz_returns201WithLocation2();
 
-        // Act & Assert: Vérifier que l'utilisateur peut récupérer la liste des quiz
+        //vérifier que l'utilisateur peut récupérer la liste des quiz
         mockMvc.perform(get("/api/quiz")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk()) // Vérifie que la réponse est 200 OK
-                .andExpect(jsonPath("$.data").isArray()) // Vérifie que la réponse contient un tableau JSON
-                .andExpect(jsonPath("$.data[0].title").value("New quizz1")) // Vérifie que le quiz attendu est dans la réponse
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].title").value("New quizz1"))
                 .andExpect(jsonPath("$.data[1].title").value("New quizz2"));
     }
 
@@ -116,8 +99,6 @@ class QuizControllerTest {
                 .andExpect(header().string("Location", "http://localhost/api/quiz/1/questions/1"));
     }
 
-
-
     @Test
     void getQuiById() throws Exception {
         QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
@@ -130,17 +111,49 @@ class QuizControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        // Supposons que la réponse contienne l'ID du quiz créé, extraire l'ID
         String location = result.getResponse().getHeader("Location");
         Long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
 
         mockMvc.perform(get("/api/quiz/{id}", quizId)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Sample Quiz")) // Vérifie le titre du quiz
-                .andExpect(jsonPath("$.description").doesNotExist()) // Vérifie que la description est absente (si null)
+                .andExpect(jsonPath("$.title").value("Sample Quiz"))
+                .andExpect(jsonPath("$.description").doesNotExist())
                 .andExpect(jsonPath("$.questions").isArray());
+    }
 
+    @Test
+    void updateQuizTitle() throws Exception {
+        QuizDto quiz = new QuizDto(-1L, "Old title");
+        UserUtils.createUserIfNotExists("testUser");
+
+        MvcResult result = mockMvc.perform(post("/api/quiz")
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(quiz)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String location = result.getResponse().getHeader("Location");
+        Long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        PatchQuizTitleRequestDTO patchRequest = PatchQuizTitleRequestDTO.builder()
+                .op("replace")
+                .path("/title")
+                .value("New Title")
+                .build();
+
+        // effectuer le PATCH
+        mockMvc.perform(patch("/api/quiz/{id}", quizId)
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(patchRequest))))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/quiz/{id}", quizId)
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("New Title"));
     }
 
 }
