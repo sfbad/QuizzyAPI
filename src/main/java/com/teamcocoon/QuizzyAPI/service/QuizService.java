@@ -10,6 +10,7 @@ import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -130,11 +131,12 @@ public class QuizService {
                 .orElseThrow(() -> new EntityNotFoundedException("Ce quizz n'existe pas !!"));
     }
 
-    public Long addQuestionToQuiz(Long idQuiz, AddNewQuestionDTO questionDTO) {
+    public Long addQuestionToQuiz(Long idQuiz, @NotNull AddNewQuestionDTO questionDTO) {
         Quiz quizz = getQuizById(idQuiz);
         Question question = questionService.saveQuestion(Question.builder()
                 .title(questionDTO.title())
                 .quiz(quizz)
+                        .responses(new ArrayList<>())
                 .build());
 
         questionDTO.answers().forEach(answer -> {
@@ -143,13 +145,9 @@ public class QuizService {
                     .isCorrect(answer.isCorrect())
                     .build();
             questionService.addResponsesToQuestion(question.getQuestionId(), response);
-            log.info("Ajout de la reponses   : " +response +" a la question : " + question);
-            question.getResponses().add(response);
         });
 
         quizz.getQuestions().add(question);
-        questionService.saveQuestion(question);
-
         quizRepository.save(quizz);
         return question.getQuestionId();
     }

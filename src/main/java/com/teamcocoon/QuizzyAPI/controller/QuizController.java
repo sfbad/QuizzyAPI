@@ -7,6 +7,7 @@ import com.teamcocoon.QuizzyAPI.service.QuizService;
 import jakarta.validation.Valid;
 import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/quiz")
 @RequiredArgsConstructor
@@ -78,11 +80,12 @@ public class QuizController {
         System.out.println("addNewQuestion : " + question);
         Long questionId = quizService.addQuestionToQuiz(id, question);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
+                .path("/{questionId}")
                 .buildAndExpand(questionId)
                 .toUri();
 
         HttpHeaders headers = new HttpHeaders();
+        log.info("location : " + location);
         headers.setLocation(location);
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);

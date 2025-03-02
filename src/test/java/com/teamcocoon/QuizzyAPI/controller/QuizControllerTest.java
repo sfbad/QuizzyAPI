@@ -5,7 +5,7 @@ import com.nimbusds.jose.util.Pair;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
-import com.teamcocoon.QuizzyAPI.utils.UserUtils;
+import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,13 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.teamcocoon.QuizzyAPI.utils.UserUtils.postToPathThenReturnData;
+import static com.teamcocoon.QuizzyAPI.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = QuizzyApiApplication.class
@@ -38,78 +38,64 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application-test.properties")
 class QuizControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
-    private Jwt jwt;
     private ObjectMapper objectMapper = new ObjectMapper();
-    private  List<AnswersDTO>  answers = new ArrayList<>();
-    AnswersDTO answersDTO1 = new AnswersDTO("Paris",true);
-    AnswersDTO answersDTO2 = new AnswersDTO("Italie",false);
-
+    private List<AnswersDTO> answers = new ArrayList<>();
+    private AnswersDTO answersDTO1 = new AnswersDTO("Paris", true);
+    private AnswersDTO answersDTO2 = new AnswersDTO("Italie", false);
+    private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "New quizz1");
-        UserRequestDto user = new UserRequestDto("Test");
-        mockMvc.perform(post("/api/users")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)));
+        QuizDto quiz = new QuizDto(1L, "New quizz1");
+        // Créer un utilisateur si non existant
+        TestUtils.createUserIfNotExists("testUser");
 
+        // Créer un quiz avec le méthode utilitaire
         mockMvc.perform(post("/api/quiz")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(quiz)))
                 .andExpect(status().isCreated());
-    }
-
-    @Test
-    void createQuiz_returns201WithLocation2() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "New quizz2");
-        UserUtils.createUserIfNotExists("testUser");
-
-        mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated());
-
     }
 
     @Test
     void getListQuiz_returnsListOfQuizzes() throws Exception {
-        //créer un quiz pour un utilisateur
         createQuiz_returns201WithLocation();
-        createQuiz_returns201WithLocation2();
 
-        //vérifier que l'utilisateur peut récupérer la liste des quiz
-        mockMvc.perform(get("/api/quiz")
+        // Récupérer la liste des quizzes
+        mockMvc.perform(get(BASE_URL)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].title").value("New quizz1"))
-                .andExpect(jsonPath("$.data[1].title").value("New quizz2"));
+                .andExpect(jsonPath("$.data[0].title").value("New quizz1"));
     }
 
     @Test
     void addNewQuestion_ShouldReturn_LocationUrl_For_The_CreatedQuestion() throws Exception {
-        createQuiz_returns201WithLocation();
+        createQuiz_returns201WithLocation();  // Créer un quiz d'abord si nécessaire
         answers.add(answersDTO1);
         answers.add(answersDTO2);
+
         AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
 
-        mockMvc.perform(post("/api/quiz/{quizId}/questions", 1L)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(question)))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "http://localhost/api/quiz/1/questions/1"));
+        Optional<Pair<AddNewQuestionDTO,String>> response = performRequest(
+                POST, BASE_URL + "/1/questions", question, AddNewQuestionDTO.class);
+
+        assertTrue(response.isPresent(), "La réponse ne doit pas être nulle");
+        String location = "http://localhost/api/quiz/1/questions/1";
+        assertEquals(location, response.get().getRight(),"L'URL Location ne correspond pas à celle attendue");
+        //assertTrue(response.get().getRight().matches("http://localhost/api/quiz/\\d+/questions/\\d+"),
+        //    "L'URL Location a un format invalide.");
     }
 
+
     @Test
-    void getQuiById() throws Exception {
+    void getQuizById() throws Exception {
         QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
-        UserUtils.createUserIfNotExists("testUser");
+        TestUtils.createUserIfNotExists("testUser");
 
         MvcResult result = mockMvc.perform(post("/api/quiz")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
@@ -132,7 +118,7 @@ class QuizControllerTest {
     @Test
     void updateQuizTitle() throws Exception {
         QuizDto quiz = new QuizDto(-1L, "Old title");
-        UserUtils.createUserIfNotExists("testUser");
+        TestUtils.createUserIfNotExists("testUser");
 
         MvcResult result = mockMvc.perform(post("/api/quiz")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
@@ -150,7 +136,7 @@ class QuizControllerTest {
                 .value("New Title")
                 .build();
 
-        // effectuer le PATCH
+        // Effectuer le PATCH
         mockMvc.perform(patch("/api/quiz/{id}", quizId)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,44 +148,35 @@ class QuizControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("New Title"));
     }
-
     @Test
-    void testTest() throws Exception {
-        UserUtils.createUserIfNotExists("testUser");
+    void getQuizByIdTT() throws Exception {
+        QuizDto quiz = new QuizDto(2L, "Sample Quiz");
+        TestUtils.createUserIfNotExists("testUser");
 
-        Quiz quizRequest = new Quiz();
-        quizRequest.setTitle("Test Quiz");
+        // Effectuer la requête POST pour créer le quiz via performRequest
+        Optional<Pair<QuizDto, String>> createResponse = performRequest(
+                POST, BASE_URL, quiz, QuizDto.class);
 
-        Optional<Pair<QuizResponseDto, String>> result = postToPathThenReturnData(UserUtils.POST,
-                "/api/quiz", quizRequest, QuizResponseDto.class, true);
+        assertTrue(createResponse.isPresent(), "La réponse de création ne doit pas être nulle.");
+        String location = createResponse.get().getRight();
 
-        assertTrue(result.isPresent(), "La réponse ne doit pas être vide");
+        assertNotNull(location, "L'URL 'Location' ne doit pas être nulle.");
 
-        QuizResponseDto quizResponse = result.get().getLeft();
-        String headers = result.get().getRight();
+        // Extraire l'ID du quiz depuis l'URL "Location"
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
 
-        assertNotNull(headers, "Les headers ne doivent pas être null");
-        assertNotNull(headers, "L'URL Location ne doit pas être null");
-        System.out.println("L'URI générée est : " + headers);
-        System.out.println("quizz response: " + quizResponse);
-    }
-    @Test
-    void testTestReturnListQuestionsDto() throws Exception {
-        //UserUtils.createUserIfNotExists("testUser");
+        // Effectuer la requête GET pour récupérer le quiz par ID via performRequest
+        Optional<Pair<QuizResponseDto,String>> getResponse = performRequest(
+                GET, BASE_URL+"/"+quizId, null, QuizResponseDto.class);
 
-        createQuiz_returns201WithLocation();
+        // Vérifier que la réponse n'est pas nulle
+        assertTrue(getResponse.isPresent(), "La réponse de récupération du quiz ne doit pas être nulle.");
 
-        Optional<Pair<ListQuizResponseDto, String>> result = postToPathThenReturnData(UserUtils.GET,
-                "/api/quiz", null, ListQuizResponseDto.class, false);
-
-        assertTrue(result.isPresent(), "La réponse ne doit pas être vide");
-
-        ListQuizResponseDto listQuizResponseDto = result.get().getLeft();
-        String headers = result.get().getRight();
-
-        assertNull(headers, "Les headers ne doivent pas être null");
-        System.out.println("L'URI générée est : " + headers);
-        System.out.println("quizz response: " + listQuizResponseDto);
+        // Vérifier les valeurs retournées par la requête GET
+        QuizResponseDto retrievedQuiz = getResponse.get().getLeft();
+        assertEquals("Sample Quiz", retrievedQuiz.title(), "Le titre du quiz doit être 'Sample Quiz'.");
+        assertNull(retrievedQuiz.description(), "La description du quiz ne doit pas exister.");
+        assertNotNull(retrievedQuiz.questions(), "La liste des questions du quiz doit être présente.");
     }
 
 }

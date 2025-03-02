@@ -32,9 +32,14 @@ public class QuestionService {
     }
 
     public void addResponsesToQuestion(Long  questionId, Response response) {
+        log.info("Adding responses to question {}", questionId);
         Question question = getQuestionById(questionId);
         response.setQuestion(question);
         responseRepository.save(response);
+        question.getResponses().add(response);
+        questionRepository.save(question);
+        log.info("Adding responses to question {} fin", questionId);
+
     }
 
     public void deleteAllByQuestion(Question question) {
