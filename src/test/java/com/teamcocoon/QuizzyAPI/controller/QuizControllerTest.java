@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -75,7 +76,7 @@ class QuizControllerTest {
 
     @Test
     void addNewQuestion_ShouldReturn_LocationUrl_For_The_CreatedQuestion() throws Exception {
-        createQuiz_returns201WithLocation();  // Créer un quiz d'abord si nécessaire
+        createQuiz_returns201WithLocation();
         answers.add(answersDTO1);
         answers.add(answersDTO2);
 
@@ -89,6 +90,24 @@ class QuizControllerTest {
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
         assertTrue(location.matches("http://localhost/api/quiz/1/questions/\\d+"),
                 "L'URL Location a un format invalide.");
+
+    }
+    @Test
+    void addNewQuestion_ShouldReturn_Exeption_Like_ThisQuiz_Doesnt_Exist() throws Exception {
+        createQuiz_returns201WithLocation();
+        answers.add(answersDTO1);
+        answers.add(answersDTO2);
+
+        AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
+
+        Response<MockHttpServletResponse> response = performPostRequest(
+                BASE_URL + "/2/questions", question, MockHttpServletResponse.class);
+
+        assertEquals(404, response.status(), "Le statut doit être 404");
+        String location = response.headers().get("Location");
+        assertNull(location, "L'URL Location  doit  être nulle.");
+        assertEquals("Ce quizz n'existe pas !!", response.body().getContentAsString(), "Le message d'erreur doit être 'Ce quizz n'existe pas !!'");
+
     }
 
 

@@ -102,6 +102,10 @@ public class TestUtils {
      */
     public static <T> Response<T> performPostRequest(String rootPath, Object data, Class<T> returnDtoClass) throws Exception {
         MvcResult result = performHttpRequest(rootPath, POST, data);
+        if (result.getResponse().getContentType().contains("text/plain")) {
+            String errorMessage = result.getResponse().getContentAsString();
+            return new Response<>(result.getResponse().getStatus(), (T) errorMessage, Map.of());
+        }
         return handleResponse(result, returnDtoClass);
     }
 
