@@ -155,8 +155,6 @@ class QuizControllerTest {
         Response<QuizResponseDto> getResponse = performGetRequest(
                 BASE_URL + "/" + quizId, QuizResponseDto.class);
 
-        // Vérifier que la réponse n'est pas nulle
-
         // Vérifier la mise à jour du titre
         QuizResponseDto updatedQuiz = getResponse.body();
         assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
