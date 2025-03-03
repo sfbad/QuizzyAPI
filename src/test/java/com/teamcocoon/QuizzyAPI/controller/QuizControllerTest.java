@@ -54,11 +54,12 @@ class QuizControllerTest {
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz avec le méthode utilitaire
-        mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated());
+        Response<Void> response = TestUtils.performPostRequest(BASE_URL,quiz, Void.class);
+
+        assertEquals(201, response.status(), "Le statut doit être 201");
+        String location = response.headers().get(HttpHeaders.LOCATION);
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
+
     }
 
     @Test
@@ -72,6 +73,7 @@ class QuizControllerTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].title").value("New quizz1"));
     }
+
 
     @Test
     void addNewQuestion_ShouldReturn_LocationUrl_For_The_CreatedQuestion() throws Exception {
