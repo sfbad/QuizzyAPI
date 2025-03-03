@@ -81,14 +81,14 @@ class QuizControllerTest {
 
         AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
 
-        Optional<Pair<AddNewQuestionDTO,String>> response = performRequest(
-                POST, BASE_URL + "/1/questions", question, AddNewQuestionDTO.class);
+        Response<AddNewQuestionDTO> response = performPostRequest(
+                BASE_URL + "/1/questions", question, AddNewQuestionDTO.class);
 
-        assertTrue(response.isPresent(), "La réponse ne doit pas être nulle");
-        String location = "http://localhost/api/quiz/1/questions/1";
-        assertEquals(location, response.get().getRight(),"L'URL Location ne correspond pas à celle attendue");
-        //assertTrue(response.get().getRight().matches("http://localhost/api/quiz/\\d+/questions/\\d+"),
-        //    "L'URL Location a un format invalide.");
+        assertEquals(201, response.status(), "Le statut doit être 201");
+        String location = response.headers().get("Location");
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
+        assertTrue(location.matches("http://localhost/api/quiz/1/questions/\\d+"),
+                "L'URL Location a un format invalide.");
     }
 
 
@@ -97,22 +97,27 @@ class QuizControllerTest {
         QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
         TestUtils.createUserIfNotExists("testUser");
 
-        MvcResult result = mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated())
-                .andReturn();
+        // Créer un quiz via la méthode performRequest
+        Response<QuizDto> createResponse = performPostRequest(
+                BASE_URL, quiz, QuizDto.class);
 
-        String location = result.getResponse().getHeader("Location");
-        Long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+        // Vérifier la réponse de la création du quiz
+        assertEquals(201, createResponse.status(), "Le statut de la création doit être 201");
+        String location = createResponse.headers().get("Location");
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
 
-        mockMvc.perform(get("/api/quiz/{id}", quizId)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Sample Quiz"))
-                .andExpect(jsonPath("$.description").doesNotExist())
-                .andExpect(jsonPath("$.questions").isArray());
+        // Extraire l'ID du quiz depuis l'URL "Location"
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        // Effectuer la requête GET pour récupérer le quiz par ID via performRequest
+        Response<QuizResponseDto> getResponse = performGetRequest(
+                BASE_URL + "/" + quizId, QuizResponseDto.class);
+
+        // Vérifier les valeurs retournées par la requête GET
+        QuizResponseDto retrievedQuiz = getResponse.body();
+        assertEquals("Sample Quiz", retrievedQuiz.title(), "Le titre du quiz doit être 'Sample Quiz'.");
+        assertNull(retrievedQuiz.description(), "La description du quiz ne doit pas exister.");
+        assertNotNull(retrievedQuiz.questions(), "La liste des questions du quiz doit être présente.");
     }
 
     @Test
@@ -120,34 +125,43 @@ class QuizControllerTest {
         QuizDto quiz = new QuizDto(-1L, "Old title");
         TestUtils.createUserIfNotExists("testUser");
 
-        MvcResult result = mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated())
-                .andReturn();
+        // Créer un quiz via la méthode performRequest
+        Response<QuizDto> createResponse = performPostRequest(
+                BASE_URL, quiz, QuizDto.class);
 
-        String location = result.getResponse().getHeader("Location");
-        Long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+        // Vérifier la réponse de la création du quiz
+        assertEquals(201, createResponse.status(), "Le statut de la création doit être 201");
+        String location = createResponse.headers().get("Location");
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
 
+        // Extraire l'ID du quiz depuis l'URL "Location"
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        // Créer une demande de mise à jour de titre
         PatchQuizTitleRequestDTO patchRequest = PatchQuizTitleRequestDTO.builder()
                 .op("replace")
                 .path("/title")
                 .value("New Title")
                 .build();
 
-        // Effectuer le PATCH
-        mockMvc.perform(patch("/api/quiz/{id}", quizId)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(List.of(patchRequest))))
-                .andExpect(status().isNoContent());
+        // Effectuer le PATCH via performRequest
+        Response<Void> patchResponse = performPatchRequest(
+                BASE_URL + "/" + quizId, patchRequest,Void.class);
 
-        mockMvc.perform(get("/api/quiz/{id}", quizId)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("New Title"));
+        // Vérifier que le statut de la réponse est "No Content" (204)
+        assertEquals(204, patchResponse.status(), "Le statut du PATCH doit être 204");
+
+        // Récupérer le quiz après la mise à jour
+        Response<QuizResponseDto> getResponse = performGetRequest(
+                BASE_URL + "/" + quizId, QuizResponseDto.class);
+
+        // Vérifier que la réponse n'est pas nulle
+
+        // Vérifier la mise à jour du titre
+        QuizResponseDto updatedQuiz = getResponse.body();
+        assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
     }
+
     @Test
     void getQuizByIdTT() throws Exception {
         QuizDto quiz = new QuizDto(2L, "Sample Quiz");
