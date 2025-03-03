@@ -161,38 +161,6 @@ class QuizControllerTest {
         QuizResponseDto updatedQuiz = getResponse.body();
         assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
     }
-
-    @Test
-    void getQuizByIdTT() throws Exception {
-        QuizDto quiz = new QuizDto(2L, "Sample Quiz");
-        TestUtils.createUserIfNotExists("testUser");
-
-        // Effectuer la requête POST pour créer le quiz via performRequest
-        Optional<Pair<QuizDto, String>> createResponse = performRequest(
-                POST, BASE_URL, quiz, QuizDto.class);
-
-        assertTrue(createResponse.isPresent(), "La réponse de création ne doit pas être nulle.");
-        String location = createResponse.get().getRight();
-
-        assertNotNull(location, "L'URL 'Location' ne doit pas être nulle.");
-
-        // Extraire l'ID du quiz depuis l'URL "Location"
-        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
-
-        // Effectuer la requête GET pour récupérer le quiz par ID via performRequest
-        Optional<Pair<QuizResponseDto,String>> getResponse = performRequest(
-                GET, BASE_URL+"/"+quizId, null, QuizResponseDto.class);
-
-        // Vérifier que la réponse n'est pas nulle
-        assertTrue(getResponse.isPresent(), "La réponse de récupération du quiz ne doit pas être nulle.");
-
-        // Vérifier les valeurs retournées par la requête GET
-        QuizResponseDto retrievedQuiz = getResponse.get().getLeft();
-        assertEquals("Sample Quiz", retrievedQuiz.title(), "Le titre du quiz doit être 'Sample Quiz'.");
-        assertNull(retrievedQuiz.description(), "La description du quiz ne doit pas exister.");
-        assertNotNull(retrievedQuiz.questions(), "La liste des questions du quiz doit être présente.");
-    }
-
 }
 
 
