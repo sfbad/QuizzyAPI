@@ -7,6 +7,7 @@ import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
+import com.teamcocoon.QuizzyAPI.repositories.ResponseRepository;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,8 @@ public class QuizService {
     private final QuestionService questionService;
     @Autowired
     private final UserRepository userRepository;
+    @Autowired
+    private ResponseRepository responseRepository;
 
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
@@ -136,7 +139,6 @@ public class QuizService {
         Question question = questionService.saveQuestion(Question.builder()
                 .title(questionDTO.title())
                 .quiz(quizz)
-                        .responses(new ArrayList<>())
                 .build());
 
         questionDTO.answers().forEach(answer -> {
@@ -153,7 +155,7 @@ public class QuizService {
     }
 
     public void updateQuestion(Long quizId, Long questionId, String newTitle, List<AnswersDTO> updatedAnswersDTOs) {
-        log.info("Updating question");
+        log.info("Updating question with : " +updatedAnswersDTOs);
         Quiz quiz = getQuizById(quizId);
         Question   question = questionService.getQuestionById(questionId);
         if (!question.getQuiz().equals(quiz)) {
@@ -162,13 +164,17 @@ public class QuizService {
         questionService.updateQuestionTitle(question, newTitle);
         List<Response> responses = questionService.getResponsesByQuestion(questionId);
         assert  responses != null;
-        responses.forEach(questionService::deleteAllAnswers);
+        responses.forEach(response -> {
+            questionService.deleteAllAnswers(response);
+        });
 
         updatedAnswersDTOs.forEach(answer -> {
             Response response = Response.builder()
                     .title(answer.title())
                     .isCorrect(answer.isCorrect())
                     .build();
+            log.info("Response : " + response);
+            responseRepository.save(response);
             questionService.addResponsesToQuestion(questionId,response);
         });
         questionService.saveQuestion(question);

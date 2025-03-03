@@ -35,8 +35,6 @@ public class QuestionService {
         log.info("Adding responses to question {}", questionId);
         Question question = getQuestionById(questionId);
         response.setQuestion(question);
-        responseRepository.save(response);
-        question.getResponses().add(response);
         questionRepository.save(question);
         log.info("Adding responses to question {} fin", questionId);
 
