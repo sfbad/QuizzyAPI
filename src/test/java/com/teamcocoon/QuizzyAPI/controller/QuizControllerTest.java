@@ -14,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -57,23 +56,27 @@ class QuizControllerTest {
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz avec le méthode utilitaire
-        mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated());
+        Response<Void> response = TestUtils.performPostRequest(BASE_URL,quiz, Void.class);
+
+        assertEquals(201, response.status(), "Le statut doit être 201");
+        String location = response.headers().get(HttpHeaders.LOCATION);
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
     }
 
     @Test
     void getListQuiz_returnsListOfQuizzes() throws Exception {
         createQuiz_returns201WithLocation();
+        createQuiz_returns201WithLocation();
 
-        // Récupérer la liste des quizzes
-        mockMvc.perform(get(BASE_URL)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].title").value("New quizz1"));
+        Response<ListQuizResponseDto> response = TestUtils.performGetRequest(BASE_URL, ListQuizResponseDto.class);
+        ListQuizResponseDto listQuiz = response.body();
+
+        assertNotNull(listQuiz, "La réponse ne doit pas être nulle");
+        assertNotNull(listQuiz.data(), "La liste des quizzes ne doit pas être nulle");
+        assertFalse(listQuiz.data().isEmpty(), "La liste des quizzes ne doit pas être vide");
+        assertEquals("New quizz1", listQuiz.data().get(0).title(), "Le titre du premier quiz doit être 'New quizz1'");
+        assertEquals("New quizz1", listQuiz.data().get(1).title(), "Le titre du 2eme quiz doit etre 'New quizz1'");
+
     }
 
     @Test
