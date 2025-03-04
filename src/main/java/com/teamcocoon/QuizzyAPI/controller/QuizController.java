@@ -36,7 +36,7 @@ public class QuizController {
     }
 
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<Void> createQuiz(@Valid @RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
         String uid = jwt.getClaim("sub");
 
         User user = userService.getUserByUID(uid);
@@ -65,8 +65,8 @@ public class QuizController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
-            @PathVariable Long id,
-            @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
+            @Valid @PathVariable Long id,
+            @Valid @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
             @AuthenticationPrincipal Jwt jwt) {
 
         String uid = jwt.getClaim("sub");
@@ -76,7 +76,7 @@ public class QuizController {
     }
 
     @PostMapping("/{id}/questions")
-    public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @PathVariable Long id,@Valid @RequestBody AddNewQuestionDTO question){
+    public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id, @Valid @RequestBody AddNewQuestionDTO question){
         System.out.println("addNewQuestion : " + question);
         Long questionId = quizService.addQuestionToQuiz(id, question);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -92,14 +92,14 @@ public class QuizController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
+    public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id){
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
     @PutMapping("/{quizId}/questions/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateQuestion(@PathVariable Long quizId, @PathVariable Long questionId,
+    public void updateQuestion(@Valid @PathVariable Long quizId, @Valid @PathVariable Long questionId,
                                @RequestBody @Valid AddNewQuestionDTO updateQuestionDTO) {
 
         String newTitle = updateQuestionDTO.title();
