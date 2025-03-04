@@ -100,13 +100,13 @@ class QuizControllerTest {
 
         AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
 
-        Response<MockHttpServletResponse> response = performPostRequest(
-                BASE_URL + "/2/questions", question, MockHttpServletResponse.class);
+        Response<ExceptionsResponseDTO> response = performPostRequest(
+                BASE_URL + "/2/questions", question, ExceptionsResponseDTO.class);
 
         assertEquals(404, response.status(), "Le statut doit être 404");
         String location = response.headers().get("Location");
         assertNull(location, "L'URL Location  doit  être nulle.");
-        assertEquals("Ce quizz n'existe pas !!", response.body().getContentAsString(), "Le message d'erreur doit être 'Ce quizz n'existe pas !!'");
+        assertEquals("Ce quizz n'existe pas !!", response.body().message(), "Le message d'erreur doit être 'Ce quizz n'existe pas !!'");
 
     }
 

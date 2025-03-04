@@ -168,6 +168,7 @@ public class TestUtils {
         Map<String, String> headers = new HashMap<>();  // Créer un Map pour les headers
         headers.put("Location", result.getResponse().getHeader(HttpHeaders.LOCATION));
 
+
         // Désérialiser le corps de la réponse JSON en objet du type `returnDtoClass`
         T responseObject = jsonResponse.isEmpty() ? null : mapper.readValue(jsonResponse, returnDtoClass);
 
