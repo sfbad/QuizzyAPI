@@ -1,6 +1,7 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.*;
+import com.teamcocoon.QuizzyAPI.exceptions.EntityNotFoundedException;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -110,13 +112,12 @@ public class QuizController {
     public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
         String uid = jwt.getClaim("sub");
 
-        // Vérifier si le quiz existe et appartient à l'utilisateur
-        Quiz quiz = quizService.getQuizByIdAndUser(quizId, uid);
-        if (quiz == null) {
+        Quiz quiz = quizService.getQuizByUserId(uid,quizId);
+
+        if(quiz == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        // Vérifier si le quiz est prêt à être lancé (questions + réponses)
         if (!quizService.isQuizReady(quiz)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -136,6 +137,8 @@ public class QuizController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(location);
+
+        System.out.println("location is : " + location);
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }

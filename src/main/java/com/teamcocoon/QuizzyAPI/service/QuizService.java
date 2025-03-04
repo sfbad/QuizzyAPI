@@ -9,7 +9,6 @@ import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import com.teamcocoon.QuizzyAPI.repositories.ResponseRepository;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +38,8 @@ public class QuizService {
     private final UserRepository userRepository;
     @Autowired
     private ResponseRepository responseRepository;
+    @Autowired
+    private UserService userService;
 
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
@@ -166,6 +168,7 @@ public class QuizService {
         List<Response> responses = questionService.getResponsesByQuestion(questionId);
         assert  responses != null;
         responses.forEach(response -> {
+            question.getResponses().remove(response);
             questionService.deleteAllAnswers(response);
         });
 
@@ -202,18 +205,34 @@ public class QuizService {
         return RandomStringUtils.randomAlphanumeric(6);
     }
 
-    public Quiz getQuizByIdAndUser(Long quizId, String userId) {
-        return quizRepository.findByQuizIdAndUserId(quizId, userId).orElse(null);
+    public Quiz getQuizByUserId(String userId, Long quizId) {
+
+        List<Quiz> quizzes = quizRepository.findListQuizByUserId(userId);
+        log.info("Quiz size "+quizzes.size()+"");
+
+        //boucle sur quizzes
+        for (Quiz quiz : quizzes) {
+            // Si on trouve le quiz avec le même id
+            //log.info(quiz.getTitle());
+            if (quiz.getQuizId().equals(quizId)) {
+                log.info(quiz.getTitle());
+                return quiz;
+            }
+        }
+        // Si on ne trouve pas de quiz avec le même id
+        return null;
     }
 
     public boolean isQuizReady(Quiz quiz) {
         // Vérifier que le quiz a des questions
+        System.out.println("question : " + quiz.getQuestions().size());
         if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
             return false;
         }
 
         // Vérifier que chaque question a au moins une réponse
         for (Question question : quiz.getQuestions()) {
+            System.out.println("response size " +  question.getResponses().size());
             if (question.getResponses() == null || question.getResponses().isEmpty()) {
                 return false;
             }
