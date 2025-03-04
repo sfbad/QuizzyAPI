@@ -9,6 +9,7 @@ import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.repository.query.Param;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/quiz")
@@ -34,21 +38,19 @@ public class QuizController {
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
-        System.out.println("UID: " + uid);
-        ResponseEntity<ListQuizResponseDto> response;
-        try {
-            response = quizService.getListQuizByUserId(uid);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
-        }
 
-        // Ajouter les liens HATEOAS
-        Map<String, String> links = new HashMap<>();
-        links.put("create", "/api/quiz");
+        // Récupérer la liste des quiz
+        ListQuizResponseDto quizResponse = quizService.getListQuizByUserId(uid);
 
-        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
-        log.info("issue 12  "+ responseWithLinks);
+        // Transformer ListQuizResponseDto en ListQuizResponseLinkDto
+        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(quizResponse.data());
+
+        // Ajouter un lien vers la création d’un quiz
+        Link createLink = linkTo(methodOn(QuizController.class).createQuiz(null,null)).withRel("").withName("create");
+        responseWithLinks.add(createLink);
+        System.out.println("uid "+ uid);
+        System.out.println("output "+ responseWithLinks);
+
         return ResponseEntity.ok(responseWithLinks);
     }
 
