@@ -52,7 +52,7 @@ class QuizControllerTest {
     private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(1L, "New quizz1");
+        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1");
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
@@ -115,7 +115,7 @@ class QuizControllerTest {
 
     @Test
     void getQuizById() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
+        QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2");
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest
@@ -143,7 +143,7 @@ class QuizControllerTest {
 
     @Test
     void updateQuizTitle() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Old title");
+        QuizDto quiz = new QuizDto(-1L, "Old title", "description3");
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest

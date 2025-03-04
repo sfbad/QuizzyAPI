@@ -56,14 +56,18 @@ public class QuizService {
     }
 
     public Quiz createQuiz(QuizDto quizDto, String uid) {
-        User user = userService.getUserByUID(uid);
+        System.out.println("UID reçu : " + uid);
 
-        Quiz quiz = new Quiz();
-        quiz.setTitle(quizDto.title());
-        quiz.setDescription(quizDto.description());
-        quiz.setUser(user);
+            User user = userService.getUserByUID(uid);
+            System.out.println("Utilisateur trouvé : " + user);
 
-        return quizRepository.save(quiz);
+            Quiz quiz = new Quiz();
+            quiz.setTitle(quizDto.title());
+            quiz.setDescription(quizDto.description());
+            quiz.setUser(user);
+
+            return quizRepository.save(quiz);
+
     }
 
    /* public ResponseEntity<QuizResponseDto> getQuizByIdAndUserId(Long idQuiz, String uid) {

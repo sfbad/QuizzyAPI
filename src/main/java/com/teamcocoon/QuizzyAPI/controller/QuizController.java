@@ -37,7 +37,12 @@ public class QuizController {
 
     @PostMapping()
     public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
+        if (jwt == null) {
+            throw new IllegalStateException("Jwt is null");
+        }
+
         String uid = jwt.getClaim("sub");
+        System.out.println("JWT received, user UID: " + uid);
 
         Quiz savedQuiz = quizService.createQuiz(quizDto, uid);
 
