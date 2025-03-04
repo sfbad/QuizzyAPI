@@ -38,14 +38,20 @@ public class QuizService {
     @Autowired
     private ResponseRepository responseRepository;
 
-    public ListQuizResponseDto getListQuizByUserId(String uid) {
+    public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
 
-        return new ListQuizResponseDto(
+        ListQuizResponseDto listQuizResponseDto = new ListQuizResponseDto(
                 listQuiz.stream()
-                        .map(quiz -> new QuizDto(quiz.getQuizId(), quiz.getTitle()))
+                        .map(quiz -> QuizDto.builder()
+                                .id(quiz.getQuizId())
+                                .title(quiz.getTitle())
+                                .build())
                         .collect(Collectors.toList())
         );
+
+        return ResponseEntity.ok(listQuizResponseDto);
+
     }
 
     public Quiz saveQuiz(Quiz quiz) {

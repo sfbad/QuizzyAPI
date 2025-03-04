@@ -1,17 +1,7 @@
 package com.teamcocoon.QuizzyAPI.dtos;
 
-import org.springframework.hateoas.RepresentationModel;
-
 import java.util.List;
+import java.util.Map;
 
-public class ListQuizResponseLinkDto extends RepresentationModel<ListQuizResponseLinkDto> {
-    private final List<QuizDto> data;
-
-    public ListQuizResponseLinkDto(List<QuizDto> data) {
-        this.data = data;
-    }
-
-    public List<QuizDto> getData() {
-        return data;
-    }
+public record ListQuizResponseLinkDto(List<QuizDto> data, Map<String, String> _links){
 }

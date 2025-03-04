@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.query.Param;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -17,11 +16,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.net.URI;
+import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -38,19 +36,14 @@ public class QuizController {
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
+        System.out.println("UID: " + uid);
+        ResponseEntity<ListQuizResponseDto> response;
+        response = quizService.getListQuizByUserId(uid);
 
-        // Récupérer la liste des quiz
-        ListQuizResponseDto quizResponse = quizService.getListQuizByUserId(uid);
-
-        // Transformer ListQuizResponseDto en ListQuizResponseLinkDto
-        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(quizResponse.data());
-
-        // Ajouter un lien vers la création d’un quiz
-        Link createLink = linkTo(methodOn(QuizController.class).createQuiz(null,null)).withRel("").withName("create");
-        responseWithLinks.add(createLink);
-        System.out.println("uid "+ uid);
-        System.out.println("output "+ responseWithLinks);
-
+        Map<String, String> links = new HashMap<>();
+        links.put("create", "/api/quiz");
+        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
+        log.info("issue 12  "+ responseWithLinks);
         return ResponseEntity.ok(responseWithLinks);
     }
 
