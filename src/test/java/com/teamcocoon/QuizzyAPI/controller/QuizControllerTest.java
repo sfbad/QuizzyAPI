@@ -56,7 +56,7 @@ class QuizControllerTest {
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
-        // Créer un quiz avec le méthode utilitaire
+        // Créer un quiz avec la méthode utilitaire
         mockMvc.perform(post("/api/quiz")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,7 +68,7 @@ class QuizControllerTest {
     void getListQuiz_returnsListOfQuizzes() throws Exception {
         createQuiz_returns201WithLocation();
 
-        // Récupérer la liste des quizzes
+        // Récupérer la liste des quiz
         mockMvc.perform(get(BASE_URL)
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isOk())
@@ -90,7 +90,7 @@ class QuizControllerTest {
         assertEquals(201, response.status(), "Le statut doit être 201");
         String location = response.headers().get("Location");
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
-        assertTrue(location.matches("http://localhost/api/quiz/1/questions/\\d+"),
+        assertTrue(location.matches("http://localhost:8080/api/quiz/1/questions/\\d+"),
                 "L'URL Location a un format invalide.");
 
     }
