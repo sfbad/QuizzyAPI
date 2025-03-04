@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -195,5 +196,29 @@ public class QuizService {
         }
 
         quizRepository.save(quiz);
+    }
+
+    public String generateExecutionId() {
+        return RandomStringUtils.randomAlphanumeric(6);
+    }
+
+    public Quiz getQuizByIdAndUser(Long quizId, String userId) {
+        return quizRepository.findByQuizIdAndUserId(quizId, userId).orElse(null);
+    }
+
+    public boolean isQuizReady(Quiz quiz) {
+        // Vérifier que le quiz a des questions
+        if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
+            return false;
+        }
+
+        // Vérifier que chaque question a au moins une réponse
+        for (Question question : quiz.getQuestions()) {
+            if (question.getResponses() == null || question.getResponses().isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

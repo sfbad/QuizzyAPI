@@ -1,10 +1,8 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.util.Pair;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
-import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,23 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static com.teamcocoon.QuizzyAPI.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -47,10 +37,11 @@ class QuizControllerTest {
     private AnswersDTO answersDTO1 = new AnswersDTO("Paris", true);
     private AnswersDTO answersDTO2 = new AnswersDTO("Italie", false);
     private final String BASE_URL = "/api/quiz";
+
+
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
         QuizDto quiz = new QuizDto(1L, "New quizz1");
-        // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz avec le méthode utilitaire
@@ -59,19 +50,22 @@ class QuizControllerTest {
         assertEquals(201, response.status(), "Le statut doit être 201");
         String location = response.headers().get(HttpHeaders.LOCATION);
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
-
     }
 
     @Test
     void getListQuiz_returnsListOfQuizzes() throws Exception {
         createQuiz_returns201WithLocation();
+        createQuiz_returns201WithLocation();
 
-        // Récupérer la liste des quizzes
-        mockMvc.perform(get(BASE_URL)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].title").value("New quizz1"));
+        Response<ListQuizResponseDto> response = TestUtils.performGetRequest(BASE_URL, ListQuizResponseDto.class);
+        ListQuizResponseDto listQuiz = response.body();
+
+        assertNotNull(listQuiz, "La réponse ne doit pas être nulle");
+        assertNotNull(listQuiz.data(), "La liste des quizzes ne doit pas être nulle");
+        assertFalse(listQuiz.data().isEmpty(), "La liste des quizzes ne doit pas être vide");
+        assertEquals("New quizz1", listQuiz.data().get(0).title(), "Le titre du premier quiz doit être 'New quizz1'");
+        assertEquals("New quizz1", listQuiz.data().get(1).title(), "Le titre du 2eme quiz doit etre 'New quizz1'");
+
     }
 
 

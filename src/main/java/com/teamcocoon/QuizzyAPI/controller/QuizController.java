@@ -106,4 +106,42 @@ public class QuizController {
         quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
     }
 
+    @PostMapping("/{quizId}/start")
+    public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
+        String uid = jwt.getClaim("sub");
+
+        // Vérifier si le quiz existe et appartient à l'utilisateur
+        Quiz quiz = quizService.getQuizByIdAndUser(quizId, uid);
+        if (quiz == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // Vérifier si le quiz est prêt à être lancé (questions + réponses)
+        if (!quizService.isQuizReady(quiz)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Générer un ID unique pour l'exécution du quiz
+        String executionId = quizService.generateExecutionId();
+        quiz.setQuizCode(executionId);
+
+        // Sauvegarder le quiz avec le code d'exécution
+        quizService.saveQuiz(quiz);
+
+        // Construire l'URL de l'exécution
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .replacePath("/api/execution/{executionId}")
+                .buildAndExpand(executionId)
+                .toUri();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
+
+
+
+
+
 }
