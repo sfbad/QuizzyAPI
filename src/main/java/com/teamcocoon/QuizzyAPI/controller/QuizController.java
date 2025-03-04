@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -30,9 +32,24 @@ public class QuizController {
     private final UserService userService;
 
     @GetMapping()
-    public ResponseEntity<ListQuizResponseDto> getListQuiz(@AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
-        return quizService.getListQuizByUserId(uid);
+        System.out.println("UID: " + uid);
+        ResponseEntity<ListQuizResponseDto> response;
+        try {
+            response = quizService.getListQuizByUserId(uid);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+        }
+
+        // Ajouter les liens HATEOAS
+        Map<String, String> links = new HashMap<>();
+        links.put("create", "/api/quiz");
+
+        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
+        log.info("issue 12  "+ responseWithLinks);
+        return ResponseEntity.ok(responseWithLinks);
     }
 
     @PostMapping()
