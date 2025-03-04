@@ -36,14 +36,10 @@ public class QuizController {
     }
 
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
         String uid = jwt.getClaim("sub");
 
-        User user = userService.getUserByUID(uid);
-
-        quiz.setUser(user);
-
-        Quiz savedQuiz = quizService.saveQuiz(quiz);
+        Quiz savedQuiz = quizService.createQuiz(quizDto, uid);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
