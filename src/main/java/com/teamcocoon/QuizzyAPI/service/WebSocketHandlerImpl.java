@@ -22,14 +22,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
-@NoArgsConstructor(force = true)
 public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
     private final Map<String, Set<WebSocketSession>> room = new ConcurrentHashMap<>();
-    @Autowired
     private final QuizService quizService ;
 
-
+    @Autowired
+    public WebSocketHandlerImpl(QuizService quizService) {
+        this.quizService = quizService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -53,14 +54,14 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
     }
 
     // Méthode pour envoyer un message à une session
-    private void sendMessageToSession(WebSocketSession session, Object dto, String type) throws Exception {
+    void sendMessageToSession(WebSocketSession session, Object dto, String type) throws Exception {
         WebSocketResponseHandlerDTO webSocketResponseHandlerDTO = new WebSocketResponseHandlerDTO(type, dto);
         String message = (new ObjectMapper()).writeValueAsString(webSocketResponseHandlerDTO);
         sendMessage(session, message);
     }
 
     // Méthode pour envoyer un message texte à une session WebSocket
-    private void sendMessage(WebSocketSession session, String message) throws Exception {
+    public void sendMessage(WebSocketSession session, String message) throws Exception {
         log.info("Sending message to {}: {}", session.getId(), message);
         if (session.isOpen()) {
             session.sendMessage(new TextMessage(message));
@@ -68,15 +69,15 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
     }
 
     // Diffusion d'un message à tous les participants d'une salle
-    private void broadcastStatusUpdate(String executionId, String statusMessage) throws Exception {
+    void broadcastStatusUpdate(String executionId, String statusMessage) throws Exception {
         log.info("Broadcasting message {} to room {}", statusMessage, executionId);
         for (WebSocketSession session : getSessions(executionId)) {
             sendMessage(session, statusMessage);
         }
     }
 
-    // Ajout d'un participant à la salle
-    private void addParticipant(String executionId, WebSocketSession session) {
+
+    void addParticipant(String executionId, WebSocketSession session) {
         if (session.isOpen()) {
             room.computeIfAbsent(executionId, k -> ConcurrentHashMap.newKeySet()).add(session);
         }
@@ -99,18 +100,11 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
         return participants == null ? 0 : participants.size();
     }
 
-    // Gère la logique lorsque l'utilisateur rejoint
+
     private void handleJoin(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
         String executionId = hostDetailsDTO.data().executionId();
-        //Quiz quiz = quizService.getQuizByQuizCode(executionId);
-        Quiz quiz1 = Quiz.builder()
-                        .quizId(1L)
-                                .title("Samp")
-                                        .quizCode("AZEZEEE")
-                                                .description("dcsffeffv")
-                                                        .build();
-
-        sendMessageToSession(session, quiz1, "hostDetails");
+        Quiz quiz = quizService.getQuizByQuizCode(executionId);
+        sendMessageToSession(session, quiz, "hostDetails");
         updateStatus(executionId);
         addParticipant(executionId, session);
     }
