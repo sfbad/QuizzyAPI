@@ -179,6 +179,49 @@ class QuizControllerTest {
         assertNotNull(retrievedQuiz.questions(), "La liste des questions du quiz doit être présente.");
     }
 
+
+    @Test
+    void getListQuizByUserId_ReturnsListOfQuizzes() throws Exception {
+        // Préparer les données de test
+        String testUser = "testUser";
+        TestUtils.createUserIfNotExists(testUser);
+
+        // Créer quelques quiz pour l'utilisateur
+        QuizDto quiz1 = QuizDto.builder()
+                .id(-1L)
+                .title("Quiz 1")
+                .build();
+
+        QuizDto quiz2 = QuizDto.builder()
+                .id(-2L)
+                .title("Quiz 2")
+                .build();
+
+        // Créer les quiz via performRequest
+        Optional<Pair<QuizDto, String>> createResponse1 = TestUtils.performRequest(
+                TestUtils.POST, "/api/quiz", quiz1, QuizDto.class);
+        assertTrue(createResponse1.isPresent(), "La création du premier quiz a échoué");
+
+        Optional<Pair<QuizDto, String>> createResponse2 = TestUtils.performRequest(
+                TestUtils.POST, "/api/quiz", quiz2, QuizDto.class);
+        assertTrue(createResponse2.isPresent(), "La création du deuxième quiz a échoué");
+
+        // Récupérer la liste des quiz pour l'utilisateur via performRequest
+        Optional<Pair<ListQuizResponseDto, String>> listResponse = TestUtils.performRequest(
+                TestUtils.GET, "/api/quiz", null, ListQuizResponseDto.class);
+
+        // Vérifications
+        assertTrue(listResponse.isPresent(), "La récupération de la liste des quiz a échoué");
+
+        ListQuizResponseDto responseDto = listResponse.get().getLeft();
+        assertNotNull(responseDto, "La réponse ne doit pas être nulle");
+
+        // Vérification des quiz
+        assertEquals(2, responseDto.data().size(), "Nombre de quiz incorrect");
+        assertEquals("Quiz 1", responseDto.data().get(0).title(), "Premier quiz incorrect");
+        assertEquals("Quiz 2", responseDto.data().get(1).title(), "Deuxième quiz incorrect");
+    }
+
 }
 
 

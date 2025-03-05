@@ -37,6 +37,8 @@ public class QuizService {
     private final UserRepository userRepository;
     @Autowired
     private ResponseRepository responseRepository;
+    @Autowired
+    private UserService userService;
 
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
@@ -54,8 +56,19 @@ public class QuizService {
 
     }
 
-    public Quiz saveQuiz(Quiz quiz) {
+    public Quiz createQuiz(QuizDto quizDto, String uid) {
+        System.out.println("UID reçu : " + uid);
+
+        User user = userService.getUserByUID(uid);
+        System.out.println("Utilisateur trouvé : " + user);
+
+        Quiz quiz = new Quiz();
+        quiz.setTitle(quizDto.title());
+        quiz.setDescription(quizDto.description());
+        quiz.setUser(user);
+
         return quizRepository.save(quiz);
+
     }
 
    /* public ResponseEntity<QuizResponseDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
