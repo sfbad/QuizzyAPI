@@ -19,6 +19,10 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
@@ -307,5 +311,12 @@ public class QuizService {
         }
 
         return true;
+    }
+    public Quiz getQuizByQuizCode(String exectionID) {
+        Optional<Quiz> quiz = quizRepository.findByQuizCode(exectionID);
+        if(quiz.isEmpty()) {
+            throw new EntityNotFoundedException("Quizz avec le code "+exectionID +" n'existe pas !!!");
+        }
+        return quiz.get();
     }
 }
