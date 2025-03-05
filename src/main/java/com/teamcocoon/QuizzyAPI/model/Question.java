@@ -27,4 +27,14 @@ public class Question {
 
     @OneToMany
     private List<Response> responses;
+
+    @Override
+    public String toString() {
+        return "Question{" +
+                "questionId=" + questionId +
+                ", title='" + title + '\'' +
+                ", quiz=" + quiz +
+                ", responses=" + responses +
+                '}';
+    }
 }

@@ -18,9 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,18 +42,71 @@ public class QuizService {
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
 
-        ListQuizResponseDto listQuizResponseDto = new ListQuizResponseDto(
-                listQuiz.stream()
-                        .map(quiz -> QuizDto.builder()
-                                .id(quiz.getQuizId())
-                                .title(quiz.getTitle())
-                                .build())
-                        .collect(Collectors.toList())
-        );
+//        listQuiz.forEach(quiz -> {
+//            System.out.println("zezezezezezez" + quiz.getTitle());
+//            System.out.println("taille des questions +++++ " +quiz.getQuestions().size());
+//            System.out.println("taille des responses ------ ");
+//            quiz.getQuestions().forEach(r-> {
+//
+//
+//                List<Response> responses = questionService.getResponsesByQuestion(r.getQuestionId());
+//                System.out.println("--- " + responses.size() + " ------");
+//
+//            });
+//        });
+        List<QuizDto> quizDtoList = listQuiz.stream()
+                .map(quiz -> {
+                    Map<String, String> links = new HashMap<>();
+                    if (isQuizStartable(quiz)) {
+                        links.put("start", "/api/quiz/" + quiz.getQuizId() + "/start");
+                    }
+                    return new QuizDto(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), links.isEmpty() ? null : links);
+                })
+                .collect(Collectors.toList());
+
+        ListQuizResponseDto listQuizResponseDto = new ListQuizResponseDto(quizDtoList);
 
         return ResponseEntity.ok(listQuizResponseDto);
-
     }
+
+    private boolean isQuizStartable(Quiz quiz) {
+        return checkForQuestionValidity(quiz.getQuestions()) &&
+              chekForTitleValidity(quiz) &&
+              chekForQuizzNotEmptyQuestionListValidity(quiz);
+    }
+    private boolean chekForTitleValidity(Quiz quiz) {
+        return !quiz.getTitle().isEmpty();
+    }
+    private boolean chekForQuizzNotEmptyQuestionListValidity(Quiz quiz) {
+        return quiz.getQuestions() != null && !quiz.getQuestions().isEmpty();
+    }
+    private boolean checkForQuestionValidity(List<Question> questions){
+
+        for (Question question : questions) {
+            if (!isQuestionValid(question)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private boolean isQuestionValid(Question question) {
+        List<Response> responses = questionService.getResponsesByQuestion(question.getQuestionId());
+        if (question.getTitle() == null || question.getTitle().isEmpty() ) {
+            return false;
+        }
+        // Vérifiez qu'il y a au moins deux réponses
+        if (responses == null || responses.size() < 2) {
+            return false;
+        }
+        long correctAnswersCount = correctAnswerCountFor(responses);
+        System.out.println(" nombre de reponses valides " +correctAnswersCount);
+        return correctAnswersCount >= 1;
+    }
+
+    private long correctAnswerCountFor(List<Response> responses){
+        return responses.stream().filter(Response::isCorrect).count();
+    }
+
 
     public Quiz saveQuiz(Quiz quiz) {
         return quizRepository.save(quiz);
