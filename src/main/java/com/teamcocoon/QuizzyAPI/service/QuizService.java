@@ -94,7 +94,7 @@ public class QuizService {
         if (question.getTitle() == null || question.getTitle().isEmpty() ) {
             return false;
         }
-        // Vérifiez qu'il y a au moins deux réponses
+        // Vérifiez qu'il y a au moins deux réponses.
         if (responses == null || responses.size() < 2) {
             return false;
         }
