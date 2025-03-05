@@ -49,7 +49,7 @@ class QuizControllerTest {
     private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(1L, "New quizz1");
+        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1");
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
@@ -94,7 +94,7 @@ class QuizControllerTest {
 
     @Test
     void getQuizById() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
+        QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2");
         TestUtils.createUserIfNotExists("testUser");
 
         MvcResult result = mockMvc.perform(post("/api/quiz")
@@ -117,7 +117,7 @@ class QuizControllerTest {
 
     @Test
     void updateQuizTitle() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Old title");
+        QuizDto quiz = new QuizDto(-1L, "Old title", "description3");
         TestUtils.createUserIfNotExists("testUser");
 
         MvcResult result = mockMvc.perform(post("/api/quiz")
@@ -150,7 +150,7 @@ class QuizControllerTest {
     }
     @Test
     void getQuizByIdTT() throws Exception {
-        QuizDto quiz = new QuizDto(2L, "Sample Quiz");
+        QuizDto quiz = new QuizDto(2L, "Sample Quiz", "description4");
         TestUtils.createUserIfNotExists("testUser");
 
         // Effectuer la requête POST pour créer le quiz via performRequest
