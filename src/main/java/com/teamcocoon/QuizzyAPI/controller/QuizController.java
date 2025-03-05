@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.hateoas.Link;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +16,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import java.util.HashMap;
-import java.util.Map;
+
 import java.net.URI;
 import java.util.List;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -34,29 +30,20 @@ public class QuizController {
     private final UserService userService;
 
     @GetMapping()
-    public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<ListQuizResponseDto> getListQuiz(@AuthenticationPrincipal Jwt jwt){
         String uid = jwt.getClaim("sub");
-        System.out.println("UID: " + uid);
-        ResponseEntity<ListQuizResponseDto> response;
-        response = quizService.getListQuizByUserId(uid);
-
-        Map<String, String> links = new HashMap<>();
-        links.put("create", "/api/quiz");
-        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
-        log.info("issue 12  "+ responseWithLinks);
-        return ResponseEntity.ok(responseWithLinks);
+        return quizService.getListQuizByUserId(uid);
     }
 
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
-        if (jwt == null) {
-            throw new IllegalStateException("Jwt is null");
-        }
-
+    public ResponseEntity<Void> createQuiz(@Valid @RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
         String uid = jwt.getClaim("sub");
-        System.out.println("JWT received, user UID: " + uid);
 
-        Quiz savedQuiz = quizService.createQuiz(quizDto, uid);
+        User user = userService.getUserByUID(uid);
+
+        quiz.setUser(user);
+
+        Quiz savedQuiz = quizService.saveQuiz(quiz);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -78,8 +65,8 @@ public class QuizController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
-            @PathVariable Long id,
-            @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
+            @Valid @PathVariable Long id,
+            @Valid @RequestBody List<PatchQuizTitleRequestDTO> patchRequests,
             @AuthenticationPrincipal Jwt jwt) {
 
         String uid = jwt.getClaim("sub");
@@ -89,7 +76,7 @@ public class QuizController {
     }
 
     @PostMapping("/{id}/questions")
-    public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @PathVariable Long id,@Valid @RequestBody AddNewQuestionDTO question){
+    public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id, @Valid @RequestBody AddNewQuestionDTO question){
         System.out.println("addNewQuestion : " + question);
         Long questionId = quizService.addQuestionToQuiz(id, question);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -105,14 +92,14 @@ public class QuizController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
+    public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id){
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
     @PutMapping("/{quizId}/questions/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateQuestion(@PathVariable Long quizId, @PathVariable Long questionId,
+    public void updateQuestion(@Valid @PathVariable Long quizId, @Valid @PathVariable Long questionId,
                                @RequestBody @Valid AddNewQuestionDTO updateQuestionDTO) {
 
         String newTitle = updateQuestionDTO.title();

@@ -1,6 +1,8 @@
 package com.teamcocoon.QuizzyAPI.dtos;
 
-import com.teamcocoon.QuizzyAPI.model.User;
+import jakarta.validation.constraints.NotBlank;
 
-public record QuestionDto (String title){
+public record QuestionDto (
+        @NotBlank(message = "le titre ne doit pas etre vide")
+        String title){
 }
