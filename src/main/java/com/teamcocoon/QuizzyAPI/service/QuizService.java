@@ -10,6 +10,7 @@ import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import com.teamcocoon.QuizzyAPI.repositories.ResponseRepository;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -20,23 +21,30 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
+@NoArgsConstructor(force = true)
 public class QuizService {
 
     private static final Logger log = LoggerFactory.getLogger(QuizService.class);
-    @Autowired
     private final QuizRepository quizRepository;
-    @Autowired
+
     private final QuestionService questionService;
-    @Autowired
     private final UserRepository userRepository;
-    @Autowired
     private ResponseRepository responseRepository;
+
+    @Autowired
+    public QuizService(QuizRepository quizRepository, QuestionService questionService, UserRepository userRepository, ResponseRepository responseRepository) {
+        this.quizRepository = quizRepository;
+        this.questionService = questionService;
+        this.userRepository = userRepository;
+        this.responseRepository = responseRepository;
+    }
 
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
@@ -195,5 +203,13 @@ public class QuizService {
         }
 
         quizRepository.save(quiz);
+    }
+
+    public Quiz getQuizByQuizCode(String exectionID) {
+        Optional<Quiz> quiz = quizRepository.findByQuizCode(exectionID);
+        if(quiz.isEmpty()) {
+            throw new EntityNotFoundedException("Quizz avec le code "+exectionID +" n'existe pas !!!");
+        }
+        return quiz.get();
     }
 }
