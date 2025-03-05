@@ -1,6 +1,7 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.teamcocoon.QuizzyAPI.dtos.*;
+import com.teamcocoon.QuizzyAPI.exceptions.EntityNotFoundedException;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
@@ -30,7 +31,6 @@ public class QuizController {
 
     private final QuizService quizService;
     private final UserService userService;
-
 
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
@@ -117,5 +117,44 @@ public class QuizController {
         String newTitle = updateQuestionDTO.title();
         quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
     }
+
+    @PostMapping("/{quizId}/start")
+    public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
+        String uid = jwt.getClaim("sub");
+
+        Quiz quiz = quizService.getQuizByUserId(uid,quizId);
+
+        if(quiz == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        if (!quizService.isQuizReady(quiz)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Générer un ID unique pour l'exécution du quiz
+        String executionId = quizService.generateExecutionId();
+        quiz.setQuizCode(executionId);
+
+        // Sauvegarder le quiz avec le code d'exécution
+        quizService.saveQuiz(quiz);
+
+        // Construire l'URL de l'exécution
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .replacePath("/api/execution/{executionId}")
+                .buildAndExpand(executionId)
+                .toUri();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(location);
+
+        System.out.println("location is : " + location);
+
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    }
+
+
+
+
 
 }

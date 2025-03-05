@@ -1,10 +1,8 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.util.Pair;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
-import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -14,24 +12,16 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 import static com.teamcocoon.QuizzyAPI.utils.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
 @SpringBootTest(
@@ -58,24 +48,28 @@ class QuizControllerTest {
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
-        // Créer un quiz avec la méthode utilitaire
-        mockMvc.perform(post("/api/quiz")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(quiz)))
-                .andExpect(status().isCreated());
+        // Créer un quiz avec le méthode utilitaire
+        Response<Void> response = TestUtils.performPostRequest(BASE_URL,quiz, Void.class);
+
+        assertEquals(201, response.status(), "Le statut doit être 201");
+        String location = response.headers().get(HttpHeaders.LOCATION);
+        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
     }
 
     @Test
     void getListQuiz_returnsListOfQuizzes() throws Exception {
         createQuiz_returns201WithLocation();
+        createQuiz_returns201WithLocation();
 
-        // Récupérer la liste des quiz
-        mockMvc.perform(get(BASE_URL)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].title").value("New quizz1"));
+        Response<ListQuizResponseDto> response = TestUtils.performGetRequest(BASE_URL, ListQuizResponseDto.class);
+        ListQuizResponseDto listQuiz = response.body();
+
+        assertNotNull(listQuiz, "La réponse ne doit pas être nulle");
+        assertNotNull(listQuiz.data(), "La liste des quizzes ne doit pas être nulle");
+        assertFalse(listQuiz.data().isEmpty(), "La liste des quizzes ne doit pas être vide");
+        assertEquals("New quizz1", listQuiz.data().get(0).title(), "Le titre du premier quiz doit être 'New quizz1'");
+        assertEquals("New quizz1", listQuiz.data().get(1).title(), "Le titre du 2eme quiz doit etre 'New quizz1'");
+
     }
 
     @Test
@@ -92,7 +86,7 @@ class QuizControllerTest {
         assertEquals(201, response.status(), "Le statut doit être 201");
         String location = response.headers().get("Location");
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
-        assertTrue(location.matches("http://localhost:8080/api/quiz/1/questions/\\d+"),
+        assertTrue(location.matches("http://localhost/api/quiz/1/questions/\\d+"),
                 "L'URL Location a un format invalide.");
 
     }
