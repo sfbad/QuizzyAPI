@@ -62,7 +62,7 @@ public class QuizService {
                 .map(quiz -> {
                     Map<String, String> links = new HashMap<>();
                     if (isQuizStartable(quiz)) {
-                        links.put("start", "/api/quiz/" + quiz.getQuizId() + "/start");
+                        links.put("start", "http://127.0.0.1:3000/api/quiz/" + quiz.getQuizId() + "/start");
                     }
                     return new QuizDto(quiz.getQuizId(), quiz.getTitle(), quiz.getDescription(), links.isEmpty() ? null : links);
                 })
@@ -296,21 +296,21 @@ public class QuizService {
     }
 
     public boolean isQuizReady(Quiz quiz) {
-        // Vérifier que le quiz a des questions
-        System.out.println("question : " + quiz.getQuestions().size());
-        if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
-            return false;
-        }
+//        // Vérifier que le quiz a des questions
+//        System.out.println("question : " + quiz.getQuestions().size());
+////        if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
+////            return false;
+////        }
+//            boolean questionValidity = chekForQuizzNotEmptyQuestionListValidity(quiz);
+//        // Vérifier que chaque question a au moins une réponse
+//        for (Question question : quiz.getQuestions()) {
+//            System.out.println("response size " +  question.getResponses().size());
+//            if (question.getResponses() == null || question.getResponses().isEmpty()) {
+//                return false;
+//            }
+//        }
 
-        // Vérifier que chaque question a au moins une réponse
-        for (Question question : quiz.getQuestions()) {
-            System.out.println("response size " +  question.getResponses().size());
-            if (question.getResponses() == null || question.getResponses().isEmpty()) {
-                return false;
-            }
-        }
-
-        return true;
+        return isQuizStartable(quiz);
     }
     public Quiz getQuizByQuizCode(String exectionID) {
         Optional<Quiz> quiz = quizRepository.findByQuizCode(exectionID);

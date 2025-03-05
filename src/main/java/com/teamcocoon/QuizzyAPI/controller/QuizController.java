@@ -124,7 +124,7 @@ public class QuizController {
         Quiz quiz = quizService.getQuizByUserId(uid,quizId);
 
         if(quiz == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new EntityNotFoundedException("Quizz introuvable ");
         }
 
         if (!quizService.isQuizReady(quiz)) {
