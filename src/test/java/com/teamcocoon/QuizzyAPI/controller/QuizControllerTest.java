@@ -6,6 +6,7 @@ import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.utils.TestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Slf4j
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = QuizzyApiApplication.class
@@ -52,7 +54,7 @@ class QuizControllerTest {
     private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(1L, "New quizz1");
+        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1");
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
@@ -115,7 +117,7 @@ class QuizControllerTest {
 
     @Test
     void getQuizById() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Sample Quiz");
+        QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2");
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest
@@ -143,7 +145,7 @@ class QuizControllerTest {
 
     @Test
     void updateQuizTitle() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Old title");
+        QuizDto quiz = new QuizDto(-1L, "Old title", "description3");
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest
@@ -180,6 +182,89 @@ class QuizControllerTest {
         QuizResponseDto updatedQuiz = getResponse.body();
         assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
     }
+
+    @Test
+    void getListQuiz_returnsEmptyListWhenNoQuizzesExist() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Perform GET request
+        Response<ListQuizResponseLinkDto> response = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+        log.info(response.toString());
+        // Verify response
+        assertEquals(200, response.status(), "Status should be 200 OK");
+        assertNotNull(response.body(), "Response body should not be null");
+        assertTrue(response.body().data().isEmpty(), "Quiz list should be empty");
+        assertNotNull(response.body()._links(), "Links map should not be null");
+        assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
+    }
+
+    @Test
+    void getListQuiz_returnsCorrectQuizzesList() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Create multiple quizzes
+        QuizDto quiz1 = new QuizDto(null, "Quiz 1", "Description 1");
+        QuizDto quiz2 = new QuizDto(null, "Quiz 2", "Description 2");
+
+        // Create first quiz
+        Response<QuizDto> createResponse1 = performPostRequest(
+                BASE_URL, quiz1, QuizDto.class);
+        assertEquals(201, createResponse1.status(), "First quiz creation should return 201");
+
+        // Create second quiz
+        Response<QuizDto> createResponse2 = performPostRequest(
+                BASE_URL, quiz2, QuizDto.class);
+        assertEquals(201, createResponse2.status(), "Second quiz creation should return 201");
+
+        // Perform GET request
+        Response<ListQuizResponseLinkDto> response = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        // Verify response
+        assertEquals(200, response.status(), "Status should be 200 OK");
+        assertNotNull(response.body(), "Response body should not be null");
+        assertEquals(2, response.body().data().size(), "Should return 2 quizzes");
+
+        // Verify quiz details
+        assertTrue(response.body().data().stream()
+                        .anyMatch(quiz -> "Quiz 1".equals(quiz.title())),
+                "First quiz title should match");
+        assertTrue(response.body().data().stream()
+                        .anyMatch(quiz -> "Quiz 2".equals(quiz.title())),
+                "Second quiz title should match");
+
+        // Verify links
+        assertNotNull(response.body()._links(), "Links map should not be null");
+        assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
+        assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should be correct");
+    }
+
+    @Test
+    void getListQuiz_returnsListWithLinks() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Create a quiz
+        QuizDto quiz = new QuizDto(null, "Test Quiz", "Test Description");
+        performPostRequest(BASE_URL, quiz, QuizDto.class);
+
+        // Perform GET request
+        Response<ListQuizResponseLinkDto> response = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        // Verify response
+        assertEquals(200, response.status(), "Status should be 200 OK");
+        assertNotNull(response.body(), "Response body should not be null");
+        assertNotNull(response.body()._links(), "Links map should not be null");
+
+        // Verify specific links
+        assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
+        assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
+    }
+
 }
 
 

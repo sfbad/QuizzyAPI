@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -29,21 +31,31 @@ public class QuizController {
     private final QuizService quizService;
     private final UserService userService;
 
+
     @GetMapping()
-    public ResponseEntity<ListQuizResponseDto> getListQuiz(@AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
-        return quizService.getListQuizByUserId(uid);
+        System.out.println("UID: " + uid);
+        ResponseEntity<ListQuizResponseDto> response;
+        response = quizService.getListQuizByUserId(uid);
+
+        Map<String, String> links = new HashMap<>();
+        links.put("create", "/api/quiz");
+        ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
+        log.info("issue 12  "+ responseWithLinks);
+        return ResponseEntity.ok(responseWithLinks);
     }
 
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@Valid @RequestBody Quiz quiz, @AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
+        if (jwt == null) {
+            throw new IllegalStateException("Jwt is null");
+        }
+
         String uid = jwt.getClaim("sub");
+        System.out.println("JWT received, user UID: " + uid);
 
-        User user = userService.getUserByUID(uid);
-
-        quiz.setUser(user);
-
-        Quiz savedQuiz = quizService.saveQuiz(quiz);
+        Quiz savedQuiz = quizService.createQuiz(quizDto, uid);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

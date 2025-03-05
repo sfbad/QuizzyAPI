@@ -8,5 +8,7 @@ public record QuizDto (@NotNull(message = "L'ID ne peut pas être nul")
                        Long id,
 
                        @NotBlank(message = "Le nom est obligatoire")
-                       String title){
+                       String title,
+
+                       String description){
 }
