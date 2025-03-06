@@ -129,7 +129,9 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
         if (checkedExecutionId != null && checkedExecutionId.equals(executionId)) {
             // Vérifier si une file existe
+
             Queue<Question> queue = questionQueues.get(executionId);
+
             if (queue == null || queue.isEmpty()) {
                 log.info("No more questions available for execution ID: {}", executionId);
                 broadcastStatusUpdate(executionId, "{\"name\": \"status\", \"data\": {\"status\": \"finished\"}}");
