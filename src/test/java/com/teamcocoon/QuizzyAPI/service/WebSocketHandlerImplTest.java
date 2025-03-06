@@ -87,7 +87,7 @@ class WebSocketHandlerImplTest {
         WebSocketSession participantSession = mock(WebSocketSession.class);
         when(participantSession.isOpen()).thenReturn(true);
 
-        webSocketHandler.addParticipant(executionIDDTO.executionId(), participantSession);
+        webSocketHandler.addToRoom(executionIDDTO.executionId(), participantSession);
 
 
         webSocketHandler.broadcastStatusUpdate(executionIDDTO.executionId(), "Status update message");
@@ -112,7 +112,7 @@ class WebSocketHandlerImplTest {
         WebSocketSession participantSession = mock(WebSocketSession.class);
         when(participantSession.isOpen()).thenReturn(false);  // Participant fermé
 
-        webSocketHandler.addParticipant(executionIDDTO.executionId(), participantSession);
+        webSocketHandler.addToRoom(executionIDDTO.executionId(), participantSession);
 
         webSocketHandler.broadcastStatusUpdate(executionIDDTO.executionId(), "Status update message");
 
@@ -140,8 +140,8 @@ class WebSocketHandlerImplTest {
         when(participantSession2.isOpen()).thenReturn(true);
 
         // Ajout de participants
-        webSocketHandler.addParticipant(executionIDDTO.executionId(), participantSession1);
-        webSocketHandler.addParticipant(executionIDDTO.executionId(), participantSession2);
+        webSocketHandler.addToRoom(executionIDDTO.executionId(), participantSession1);
+        webSocketHandler.addToRoom(executionIDDTO.executionId(), participantSession2);
 
         webSocketHandler.broadcastStatusUpdate(executionIDDTO.executionId(), "Status update message");
 
