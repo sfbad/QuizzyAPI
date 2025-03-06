@@ -31,6 +31,10 @@ public class QuizController {
     private final QuizService quizService;
     private final UserService userService;
 
+    /**
+     * Endpoint REST qui récupère la liste des quiz avec un lien de création.
+     * Extrait l'ID utilisateur du token JWT et construit la réponse pour l'issue #12.
+     */
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
@@ -45,11 +49,25 @@ public class QuizController {
         return ResponseEntity.ok(responseWithLinks);
     }
 
+
+    /**
+     * Issue6
+     * Point d'entrée REST pour la création d'un nouveau quiz.
+     * Gère la transformation du DTO en entité et la réponse HTTP standardisée.
+     *
+     * Fonctionnalités principales :
+     * - Validation du token JWT
+     * - Délégation de la création au service
+     * - Construction de l'URI de ressource
+     */
     @PostMapping()
     public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
         if (jwt == null) {
             throw new IllegalStateException("Jwt is null");
         }
+
+        System.out.println("Received QuizDto: " + quizDto);
+        System.out.println("Request URL: " + ServletUriComponentsBuilder.fromCurrentRequest().toUriString());
 
         String uid = jwt.getClaim("sub");
         System.out.println("JWT received, user UID: " + uid);
@@ -74,6 +92,12 @@ public class QuizController {
         return quizService.getQuizByIdAndUserId(id, uid);
     }*/
 
+    /**
+     * Point d'entrée REST pour la modification du titre d'un quiz.
+     *
+     * Applique une mise à jour partielle avec validation JWT et contrôle d'accès.
+     * Implémente la logique de modification selon la story #8.
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
             @Valid @PathVariable Long id,
@@ -86,6 +110,20 @@ public class QuizController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Endpoint REST pour ajouter une nouvelle question à un quiz.
+     *
+     * Characteristics clés :
+     * - Sécurisé avec authentification JWT
+     * - Crée la question via le service
+     * - Génère une URI de localisation pour la nouvelle question
+     * - Retourne un statut 201 (Created) avec l'en-tête de localisation
+     *
+     * param jwt Token d'authentification
+     * param id Identifiant du quiz
+     * param question DTO contenant les détails de la nouvelle question
+     * return ResponseEntity avec les en-têtes de réponse
+     */
     @PostMapping("/{id}/questions")
     public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id, @Valid @RequestBody AddNewQuestionDTO question){
         System.out.println("addNewQuestion : " + question);
@@ -102,12 +140,24 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    /**
+     * Issue7
+     * Endpoint sécurisé pour récupérer un quiz.
+     * Extrait l'ID utilisateur du token JWT avant de déléguer au service.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id){
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
+
+    /**
+     * Issue11
+     * Endpoint pour modifier une question existante dans un quiz.
+     * Transmet les détails de mise à jour au service.
+     * Retourne un statut 204 sans contenu en cas de succès.
+     */
     @PutMapping("/{quizId}/questions/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateQuestion(@Valid @PathVariable Long quizId, @Valid @PathVariable Long questionId,
@@ -117,6 +167,12 @@ public class QuizController {
         quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
     }
 
+
+    /**
+     * Issue14
+     * Démarre un quiz en générant un code unique et vérifiant sa validité.
+     * Génère une URI d'exécution si le quiz est prêt et appartient à l'utilisateur.
+     */
     @PostMapping("/{quizId}/start")
     public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
         String uid = jwt.getClaim("sub");
