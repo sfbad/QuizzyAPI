@@ -14,7 +14,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private QuizService quizService;
     @Autowired
-    private WebSocketHandlerImpl webSocketHandler;
     private QuestionService questionService;
     @Bean
     public WebSocketConfigurator webSocketConfigurator() {
