@@ -1,11 +1,10 @@
 package com.teamcocoon.QuizzyAPI.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.teamcocoon.QuizzyAPI.dtos.HostDetailsDTO;
-import com.teamcocoon.QuizzyAPI.dtos.StatusUpdateDTO;
-import com.teamcocoon.QuizzyAPI.dtos.WebSocketResponseHandlerDTO;
+import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.model.Question;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
+import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +24,14 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
     private final Map<String, Set<WebSocketSession>> room = new ConcurrentHashMap<>();
     private final QuizService quizService ;
+    private final QuestionService questionService;
+    private final Map<String, Queue<Question>> questionQueues = new ConcurrentHashMap<>();
+
 
     @Autowired
-    public WebSocketHandlerImpl(QuizService quizService) {
+    public WebSocketHandlerImpl(QuizService quizService, QuestionService questionService) {
         this.quizService = quizService;
+        this.questionService = questionService;
     }
 
     @Override
@@ -121,34 +124,37 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
     private void handleNextQuestion(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
         String executionId = hostDetailsDTO.data().executionId();
 
-        // Vérifier si une file existe
-        Queue<Question> queue = questionQueues.get(executionId);
-        if (queue == null || queue.isEmpty()) {
-            log.info("No more questions available for execution ID: {}", executionId);
-            broadcastStatusUpdate(executionId, "{\"name\": \"status\", \"data\": {\"status\": \"finished\"}}");
-            return;
+        String checkedExecutionId = getExecutionIdFromSession(session);
+
+        if (checkedExecutionId != null && checkedExecutionId.equals(executionId)) {
+            // Vérifier si une file existe
+            Queue<Question> queue = questionQueues.get(executionId);
+            if (queue == null || queue.isEmpty()) {
+                log.info("No more questions available for execution ID: {}", executionId);
+                broadcastStatusUpdate(executionId, "{\"name\": \"status\", \"data\": {\"status\": \"finished\"}}");
+                return;
+            }
+
+            // Récupérer la prochaine question
+            Question nextQuestion = queue.poll(); // Récupère et supprime la question en tête de file
+            QuestionTitleDTO questionTitle = new QuestionTitleDTO(nextQuestion.getTitle());
+            List<ResponseTitleDTO> answers = new ArrayList<ResponseTitleDTO>();
+            List<Response> responses = questionService.getResponsesByQuestion(nextQuestion.getQuestionId());
+            responses.forEach(response ->{
+                ResponseTitleDTO responseTitle = new ResponseTitleDTO(response.getTitle());
+                answers.add(responseTitle);
+            });
+
+            NextQuestionWSDTO nextQuestionWSDTO = new NextQuestionWSDTO(questionTitle,answers);
+
+            StatusUpdateDTO statusUpdateDTO = new StatusUpdateDTO("started",getParticipantCount(executionId));
+            sendMessageToSession(session,statusUpdateDTO,"status");
+            Thread.sleep(3000);
+            sendMessageToSession(session, nextQuestionWSDTO, "nextQuestion");
+        }else{
+            log.info("Execution ID not found in session, rejecting the request.");
+            sendMessageToSession(session, "Execution ID not found in session, rejecting the request.", "error");
         }
-
-        // Récupérer la prochaine question
-        Question nextQuestion = queue.poll(); // Récupère et supprime la question en tête de file
-
-        // Construire l'événement 'newQuestion' avec questionId
-        Map<String, Object> newQuestionData = Map.of(
-                "questionId", nextQuestion.getQuestionId(),
-                "question", nextQuestion.getTitle(),
-                "answers", nextQuestion.getResponses().stream().map(Response::getText).toList()
-        );
-
-        // Envoyer l'événement 'status' et la nouvelle question
-        broadcastStatusUpdate(executionId, new ObjectMapper().writeValueAsString(
-                new WebSocketResponseHandlerDTO("status", new StatusUpdateDTO("started", getParticipantCount(executionId)))
-        ));
-
-        broadcastStatusUpdate(executionId, new ObjectMapper().writeValueAsString(
-                new WebSocketResponseHandlerDTO("newQuestion", newQuestionData)
-        ));
-
-        log.info("Next question (ID: {}) sent for executionId {}: {}", nextQuestion.getQuestionId(), executionId, nextQuestion.getTitle());
     }
 
 

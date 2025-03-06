@@ -1,5 +1,6 @@
 package com.teamcocoon.QuizzyAPI.config;
 
+import com.teamcocoon.QuizzyAPI.service.QuestionService;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import com.teamcocoon.QuizzyAPI.service.WebSocketHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private QuizService quizService;
+    @Autowired
+    private WebSocketHandlerImpl webSocketHandler;
+    private QuestionService questionService;
     @Bean
     public WebSocketConfigurator webSocketConfigurator() {
         return new WebSocketConfigurator();
@@ -19,6 +23,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new WebSocketHandlerImpl(quizService), "/");
+        registry.addHandler(new WebSocketHandlerImpl(quizService, questionService), "/");
     }
 }
