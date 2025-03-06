@@ -3,8 +3,11 @@ package com.teamcocoon.QuizzyAPI.controller;
 import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.exceptions.EntityNotFoundedException;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
-import com.teamcocoon.QuizzyAPI.model.User;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import com.teamcocoon.QuizzyAPI.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +29,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/quiz")
 @RequiredArgsConstructor
+@Tag(name = "Quiz", description = "Endpoints concernant les quiz")
 public class QuizController {
 
     private final QuizService quizService;
     private final UserService userService;
 
+    @Operation(summary = "Récupérer la liste des quiz de l'utilisateur")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Liste des quiz récupérée avec succès")
+    })
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
         String uid = jwt.getClaim("sub");
@@ -45,6 +53,10 @@ public class QuizController {
         return ResponseEntity.ok(responseWithLinks);
     }
 
+    @Operation(summary = "Créer un quiz")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Quiz créé avec succès")
+    })
     @PostMapping()
     public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
         if (jwt == null) {
@@ -74,6 +86,11 @@ public class QuizController {
         return quizService.getQuizByIdAndUserId(id, uid);
     }*/
 
+    @Operation(summary = "Mettre à jour le titre d'un quiz")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Titre du quiz mis à jour avec succès"),
+            @ApiResponse(responseCode = "404", description = "Quiz inexistant ou non autorisé")
+    })
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
             @Valid @PathVariable Long id,
@@ -86,6 +103,10 @@ public class QuizController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Ajouter une question à un quiz")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Question ajoutée avec succès"),
+   })
     @PostMapping("/{id}/questions")
     public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id, @Valid @RequestBody AddNewQuestionDTO question){
         System.out.println("addNewQuestion : " + question);
@@ -102,12 +123,24 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Récupérer un quiz par son ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
+            @ApiResponse(responseCode = "404", description = "Quiz non trouvé")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id){
         String uid = jwt.getClaim("sub");
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
+
+
+    @Operation(summary = "Modifier une question ou ses réponses")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Question modifiée avec succès"),
+            @ApiResponse(responseCode = "404", description = "Question ou quiz non trouvé")
+    })
     @PutMapping("/{quizId}/questions/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateQuestion(@Valid @PathVariable Long quizId, @Valid @PathVariable Long questionId,
@@ -117,6 +150,12 @@ public class QuizController {
         quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
     }
 
+    @Operation(summary = "Démarrer un quiz")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Quiz démarré avec succès"),
+            @ApiResponse(responseCode = "400", description = "Quiz non prêt"),
+            @ApiResponse(responseCode = "404", description = "Quiz introuvable ou non autorisé")
+    })
     @PostMapping("/{quizId}/start")
     public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
         String uid = jwt.getClaim("sub");
