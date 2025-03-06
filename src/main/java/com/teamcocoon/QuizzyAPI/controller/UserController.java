@@ -6,6 +6,7 @@ import com.teamcocoon.QuizzyAPI.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Récupérer les données de l'utilisateur")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Données de l'utilisateur récupérées"),

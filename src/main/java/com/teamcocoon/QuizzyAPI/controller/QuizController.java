@@ -7,6 +7,7 @@ import com.teamcocoon.QuizzyAPI.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import com.teamcocoon.QuizzyAPI.service.UserService;
@@ -40,6 +41,7 @@ public class QuizController {
      * Endpoint REST qui récupère la liste des quiz avec un lien de création.
      * Extrait l'ID utilisateur du token JWT et construit la réponse pour l'issue #12.
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Récupérer la liste des quiz de l'utilisateur")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste des quiz récupérée avec succès")
@@ -70,6 +72,7 @@ public class QuizController {
      * - Délégation de la création au service
      * - Construction de l'URI de ressource
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Créer un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quiz créé avec succès")
@@ -112,6 +115,7 @@ public class QuizController {
      * Applique une mise à jour partielle avec validation JWT et contrôle d'accès.
      * Implémente la logique de modification selon la story #8.
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Mettre à jour le titre d'un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Titre du quiz mis à jour avec succès"),
@@ -143,6 +147,7 @@ public class QuizController {
      * param question DTO contenant les détails de la nouvelle question
      * return ResponseEntity avec les en-têtes de réponse
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Ajouter une question à un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Question ajoutée avec succès"),
@@ -168,6 +173,7 @@ public class QuizController {
      * Endpoint sécurisé pour récupérer un quiz.
      * Extrait l'ID utilisateur du token JWT avant de déléguer au service.
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Récupérer un quiz par son ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
@@ -186,6 +192,7 @@ public class QuizController {
      * Transmet les détails de mise à jour au service.
      * Retourne un statut 204 sans contenu en cas de succès.
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Modifier une question ou ses réponses")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Question modifiée avec succès"),
@@ -206,6 +213,7 @@ public class QuizController {
      * Démarre un quiz en générant un code unique et vérifiant sa validité.
      * Génère une URI d'exécution si le quiz est prêt et appartient à l'utilisateur.
      */
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Démarrer un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quiz démarré avec succès"),
@@ -247,6 +255,7 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Récupérer un quiz par son code d'exécution")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
