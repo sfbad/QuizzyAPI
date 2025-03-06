@@ -39,7 +39,7 @@ public class QuizController {
         response = quizService.getListQuizByUserId(uid);
 
         Map<String, String> links = new HashMap<>();
-        links.put("create", "/api/quiz");
+        links.put("create", "http://127.0.0.1:3000/api/quiz");
         ListQuizResponseLinkDto responseWithLinks = new ListQuizResponseLinkDto(response.getBody().data(), links);
         log.info("issue 12  "+ responseWithLinks);
         return ResponseEntity.ok(responseWithLinks);
