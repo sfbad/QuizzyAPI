@@ -152,6 +152,14 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @GetMapping("/test/exec/{executionId}")
+    public ResponseEntity<?> testExecution(@AuthenticationPrincipal Jwt jwt,@PathVariable String executionId){
+        QuizDToRelease  quiz1 = quizService.getQuizByQuizCode(executionId);
+        if(quiz1 == null) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quiz not found");
+        }
+        return ResponseEntity.ok(quiz1);
+    }
 
 
 

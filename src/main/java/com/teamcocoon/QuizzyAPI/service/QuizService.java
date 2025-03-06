@@ -312,11 +312,15 @@ public class QuizService {
 
         return isQuizStartable(quiz);
     }
-    public Quiz getQuizByQuizCode(String exectionID) {
+    public QuizDToRelease getQuizByQuizCode(String exectionID) {
         Optional<Quiz> quiz = quizRepository.findByQuizCode(exectionID);
+
         if(quiz.isEmpty()) {
             throw new EntityNotFoundedException("Quizz avec le code "+exectionID +" n'existe pas !!!");
         }
-        return quiz.get();
+        Quiz quiz1 = quiz.get();
+        QuizDToRelease quizDToRelease =
+                new QuizDToRelease(quiz1.getQuizId(), quiz1.getQuizCode(), quiz1.getTitle(), quiz1.getDescription());
+        return quizDToRelease;
     }
 }

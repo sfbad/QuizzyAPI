@@ -107,15 +107,16 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
     private void handleJoin(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
         String executionId = hostDetailsDTO.data().executionId();
-        Quiz quiz = quizService.getQuizByQuizCode(executionId);
+        QuizDToRelease quiz = quizService.getQuizByQuizCode(executionId);
         sendMessageToSession(session, quiz, "hostDetails");
         updateStatus(executionId);
         addParticipant(executionId, session);
     }
 
     private void handleHost(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
+        log.info("Handling message to host {}", hostDetailsDTO);
         String executionId = hostDetailsDTO.data().executionId();
-        Quiz quiz = quizService.getQuizByQuizCode(executionId);
+        QuizDToRelease quiz = quizService.getQuizByQuizCode(executionId);
         sendMessageToSession(session, quiz, "hostDetails");
         updateStatus(executionId);
         addParticipant(executionId, session);
