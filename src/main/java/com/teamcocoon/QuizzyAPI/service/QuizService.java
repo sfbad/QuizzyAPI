@@ -41,6 +41,11 @@ public class QuizService {
     @Autowired
     private UserService userService;
 
+    /**
+     * Issue12
+     * Récupère les quiz d'un utilisateur et ajoute un lien HATEOAS pour la création de quiz.
+     * ajout d'un lien de création de quiz dans la réponse.
+     */
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
 
@@ -57,10 +62,24 @@ public class QuizService {
 
     }
 
+    /**
+     * Sauvegarde simple d'un quiz en base de données.
+     * return Le quiz persisté
+     */
     public Quiz saveQuiz(Quiz quiz) {
         return quizRepository.save(quiz);
     }
 
+    /**
+     * Issue6
+     * Crée un nouveau quiz pour un utilisateur à partir des informations minimales.
+     * Implémente l'issue6' de création de quiz avec génération automatique de l'identifiant.
+     *
+     * Étapes clés :
+     * - Vérifie l'authentification de l'utilisateur
+     * - Associe le quiz au bon utilisateur
+     * - Génère une URI de localisation pour accéder au quiz créé
+     */
     public Quiz createQuiz(QuizDto quizDto, String uid) {
         System.out.println("UID reçu : " + uid);
 
@@ -98,13 +117,21 @@ public class QuizService {
                 .build());
     }*/
 
+    /**
+     * Issue7
+     * Récupère un quiz avec ses questions, vérifiant l'appartenance à l'utilisateur.
+     * Transforme les entités en DTO pour la réponse API.
+     * param idQuiz Identifiant du quiz
+     * param uid Identifiant de l'utilisateur
+     * return DTO contenant les détails du quiz et ses questions
+     * throws RuntimeException si le quiz n'existe pas ou n'appartient pas à l'utilisateur
+     */
     public ResponseEntity<ListQuestionsDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
         log.info("Recuperation du quizz : " + idQuiz);
         Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
                 .filter(q -> q.getUser().getUserId().equals(uid))
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
-        //System.out.println("Quiz title: " + quiz.getTitle());
         List<Question> questions = quiz.getQuestions();
         List<QuestionAnswersDto> questionDtoss = new ArrayList<>();
 
@@ -127,18 +154,6 @@ public class QuizService {
 
             questionDtoss.add(questionAnswersDto);
         });
-
-//        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
-//                .map(q -> QuestionAnswersDto.builder()
-//                        .title(q.getTitle())
-//                        .answers(q.getResponses().stream()
-//                                .map(r -> AnswersDTO.builder()
-//                                        .title(r.getTitle())
-//                                        .isCorrect(r.isCorrect())
-//                                        .build())
-//                                .collect(Collectors.toList()))
-//                        .build())
-//                .collect(Collectors.toList());
         log.info("Envoie de la liste aves ces questions  : " + questionDtoss);
 
         return ResponseEntity.ok(ListQuestionsDto.builder()
@@ -154,6 +169,19 @@ public class QuizService {
                 .orElseThrow(() -> new EntityNotFoundedException("Ce quizz n'existe pas !!"));
     }
 
+    /**
+     * Ajoute une nouvelle question à un quiz existant.
+     *
+     * Cette méthode :
+     * 1. Récupère le quiz par son ID
+     * 2. Crée et sauvegarde une nouvelle question associée au quiz
+     * 3. Ajoute les réponses à la question
+     * 4. Met à jour le quiz avec la nouvelle question
+     *
+     * param idQuiz L'identifiant du quiz auquel ajouter la question
+     * param questionDTO Les détails de la nouvelle question (titre et réponses)
+     * return L'identifiant de la question nouvellement créée
+     */
     public Long addQuestionToQuiz(Long idQuiz, @NotNull AddNewQuestionDTO questionDTO) {
         Quiz quizz = getQuizById(idQuiz);
         Question question = questionService.saveQuestion(Question.builder()
@@ -174,6 +202,16 @@ public class QuizService {
         return question.getQuestionId();
     }
 
+    /**
+     * Issue11
+     * Met à jour une question dans un quiz spécifique.
+     * Supprime les anciennes réponses et ajoute les nouvelles.
+     * param quizId Identifiant du quiz
+     * param questionId Identifiant de la question à modifier
+     * param newTitle Nouveau titre de la question
+     * param updatedAnswersDTOs Nouvelles réponses à associer
+     * throws EntityNotFoundedException si la question n'appartient pas au quiz
+     */
     public void updateQuestion(Long quizId, Long questionId, String newTitle, List<AnswersDTO> updatedAnswersDTOs) {
         log.info("Updating question with : " +updatedAnswersDTOs);
         Quiz quiz = getQuizById(quizId);
@@ -201,6 +239,11 @@ public class QuizService {
         questionService.saveQuestion(question);
     }
 
+    /**
+     * Mise à jour du titre d'un quiz avec validation de propriété.
+     * Gère la modification partielle d'un quiz selon les spécifications JSON Patch.
+     * Vérifie que l'utilisateur est bien propriétaire du quiz avant modification.
+     */
     public void updateQuizTitle(Long id, List<PatchQuizTitleRequestDTO> patchQuizTitleRequestDTOS, String uid) {
         Quiz quiz = quizRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Quiz not found"));
         User user = userRepository.findById(uid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -218,10 +261,18 @@ public class QuizService {
         quizRepository.save(quiz);
     }
 
+    /**
+     * Génère un identifiant aléatoire de 6 caractères alphanumériques.
+     * @return Code d'exécution du quiz
+     */
     public String generateExecutionId() {
         return RandomStringUtils.randomAlphanumeric(6);
     }
 
+    /**
+     * Retrouve un quiz spécifique appartenant à un utilisateur.
+     * return Le quiz si trouvé, null sinon
+     */
     public Quiz getQuizByUserId(String userId, Long quizId) {
 
         List<Quiz> quizzes = quizRepository.findListQuizByUserId(userId);
@@ -240,6 +291,11 @@ public class QuizService {
         return null;
     }
 
+    /**
+     * Vérifie si un quiz est prêt à être démarré.
+     * Conditions : quiz non vide et chaque question a au moins une réponse.
+     * return true si le quiz est complet, false sinon
+     */
     public boolean isQuizReady(Quiz quiz) {
         // Vérifier que le quiz a des questions
         System.out.println("question : " + quiz.getQuestions().size());
