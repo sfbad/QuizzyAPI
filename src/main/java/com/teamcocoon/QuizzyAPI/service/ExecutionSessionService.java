@@ -48,32 +48,40 @@ public class ExecutionSessionService {
         return participants.size();
     }
 
-    public void broadcastMessage(String message) {
-
-    }
     public void sendMessageToSession(WebSocketSession session, String name, Object dto ) throws Exception {
         WebSocketResponseHandlerDTO webSocketResponseHandlerDTO = new WebSocketResponseHandlerDTO(name, dto);
         String message = (new ObjectMapper()).writeValueAsString(webSocketResponseHandlerDTO);
+        log.info("message to send {} to even {}",message,name);
         sendMessage(session, message);
     }
 
     // Méthode pour envoyer un message texte à une session WebSocket
     private void sendMessage(WebSocketSession session, String message) throws Exception {
-        log.info("Sending message to {}: {}", session.getId(), message);
         if (session.isOpen()) {
             session.sendMessage(new TextMessage(message));
         }
     }
 
     public void broadcastMessageToHost(List<WebSocketSession> hosts, String name, Object dto) throws Exception {
+        log.info("< broadcasting message to Host >");
         for (WebSocketSession session : hosts) {
             sendMessageToSession(session, name, dto);
         }
+        log.info("< broadcasting message to Host finished >");
+
     }
     public void broadcastMessageToParticipants(List<WebSocketSession> participants, String name, Object dto) throws Exception {
+        log.info("< broadcasting message to Participants >");
+
         for (WebSocketSession session : participants) {
             sendMessageToSession(session, name, dto);
         }
+        log.info("< broadcasting message to Participants finished >");
     }
+    public void broadcastMessageToEveryBody(String name, Object dto) throws Exception {
+        broadcastMessageToHost(hosts, name, dto);
+        broadcastMessageToParticipants(participants, name, dto);
+    }
+
 
 }
