@@ -186,8 +186,6 @@ public class QuizController {
      * Transmet les détails de mise à jour au service.
      * Retourne un statut 204 sans contenu en cas de succès.
      */
-
-
     @Operation(summary = "Modifier une question ou ses réponses")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Question modifiée avec succès"),
@@ -249,6 +247,12 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @Operation(summary = "Récupérer un quiz par son code d'exécution")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
+            @ApiResponse(responseCode = "404", description = "Quiz introuvable ou non autorisé"),
+            @ApiResponse(responseCode = "400", description = "Quiz non prêt")
+    })
     @GetMapping("/test/exec/{executionId}")
     public ResponseEntity<?> testExecution(@AuthenticationPrincipal Jwt jwt,@PathVariable String executionId){
         QuizDToRelease  quiz1 = quizService.getQuizByQuizCode(executionId);
