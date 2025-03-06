@@ -383,6 +383,21 @@ public class QuizService {
     }
 
 
+    public QuizDToRelease getQuizByQuizCode(String executionId) {
+        Optional<Quiz> quiz = quizRepository.findByQuizCode(executionId);
+        if (quiz.isEmpty()) {
+            throw new EntityNotFoundedException("Quiz not found");
+
+        }
+        Quiz quiz1 = quiz.get();
+        return new QuizDToRelease(
+                quiz1.getQuizId(),
+                quiz1.getQuizCode(),
+                quiz1.getTitle(),
+                quiz1.getDescription());
+    }
+
+
 
 
 }
