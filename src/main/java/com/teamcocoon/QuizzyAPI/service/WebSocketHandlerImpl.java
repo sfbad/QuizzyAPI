@@ -17,6 +17,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Component
 @Slf4j
@@ -107,15 +108,16 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
     private void handleJoin(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
         String executionId = hostDetailsDTO.data().executionId();
-        Quiz quiz = quizService.getQuizByQuizCode(executionId);
+        QuizDToRelease quiz = quizService.getQuizByQuizCode(executionId);
         sendMessageToSession(session, quiz, "hostDetails");
         updateStatus(executionId);
         addParticipant(executionId, session);
     }
 
     private void handleHost(WebSocketSession session, HostDetailsDTO hostDetailsDTO) throws Exception {
+        log.info("Handling message to host {}", hostDetailsDTO);
         String executionId = hostDetailsDTO.data().executionId();
-        Quiz quiz = quizService.getQuizByQuizCode(executionId);
+        QuizDToRelease quiz = quizService.getQuizByQuizCode(executionId);
         sendMessageToSession(session, quiz, "hostDetails");
         updateStatus(executionId);
         addParticipant(executionId, session);
@@ -128,10 +130,20 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
 
         if (checkedExecutionId != null && checkedExecutionId.equals(executionId)) {
             // Vérifier si une file existe
+            Optional<List<Question>> questions = questionService.getQuestionsByQuizIdAndQuizCode(checkedExecutionId);
+            if (!questions.isPresent()) {
+                log.info("No question found for execution ID: {}", executionId);
+                return;
+            }
+            questions.get().forEach(question -> {
+                // Ajouter la question à la file
+                questionQueues.computeIfAbsent(executionId, k -> new ConcurrentLinkedQueue<>()).add(question);
+            });
+
             Queue<Question> queue = questionQueues.get(executionId);
             if (queue == null || queue.isEmpty()) {
                 log.info("No more questions available for execution ID: {}", executionId);
-                broadcastStatusUpdate(executionId, "{\"name\": \"status\", \"data\": {\"status\": \"finished\"}}");
+                sendMessage(session,"No more questions available");
                 return;
             }
 

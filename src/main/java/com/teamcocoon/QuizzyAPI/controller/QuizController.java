@@ -35,6 +35,11 @@ public class QuizController {
     private final QuizService quizService;
     private final UserService userService;
 
+
+    /**
+     * Endpoint REST qui récupère la liste des quiz avec un lien de création.
+     * Extrait l'ID utilisateur du token JWT et construit la réponse pour l'issue #12.
+     */
     @Operation(summary = "Récupérer la liste des quiz de l'utilisateur")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste des quiz récupérée avec succès")
@@ -53,6 +58,18 @@ public class QuizController {
         return ResponseEntity.ok(responseWithLinks);
     }
 
+
+
+    /**
+     * Issue6
+     * Point d'entrée REST pour la création d'un nouveau quiz.
+     * Gère la transformation du DTO en entité et la réponse HTTP standardisée.
+     *
+     * Fonctionnalités principales :
+     * - Validation du token JWT
+     * - Délégation de la création au service
+     * - Construction de l'URI de ressource
+     */
     @Operation(summary = "Créer un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quiz créé avec succès")
@@ -62,6 +79,9 @@ public class QuizController {
         if (jwt == null) {
             throw new IllegalStateException("Jwt is null");
         }
+
+        System.out.println("Received QuizDto: " + quizDto);
+        System.out.println("Request URL: " + ServletUriComponentsBuilder.fromCurrentRequest().toUriString());
 
         String uid = jwt.getClaim("sub");
         System.out.println("JWT received, user UID: " + uid);
@@ -86,6 +106,12 @@ public class QuizController {
         return quizService.getQuizByIdAndUserId(id, uid);
     }*/
 
+    /**
+     * Point d'entrée REST pour la modification du titre d'un quiz.
+     *
+     * Applique une mise à jour partielle avec validation JWT et contrôle d'accès.
+     * Implémente la logique de modification selon la story #8.
+     */
     @Operation(summary = "Mettre à jour le titre d'un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Titre du quiz mis à jour avec succès"),
@@ -103,6 +129,20 @@ public class QuizController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Endpoint REST pour ajouter une nouvelle question à un quiz.
+     *
+     * Characteristics clés :
+     * - Sécurisé avec authentification JWT
+     * - Crée la question via le service
+     * - Génère une URI de localisation pour la nouvelle question
+     * - Retourne un statut 201 (Created) avec l'en-tête de localisation
+     *
+     * param jwt Token d'authentification
+     * param id Identifiant du quiz
+     * param question DTO contenant les détails de la nouvelle question
+     * return ResponseEntity avec les en-têtes de réponse
+     */
     @Operation(summary = "Ajouter une question à un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Question ajoutée avec succès"),
@@ -123,6 +163,11 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    /**
+     * Issue7
+     * Endpoint sécurisé pour récupérer un quiz.
+     * Extrait l'ID utilisateur du token JWT avant de déléguer au service.
+     */
     @Operation(summary = "Récupérer un quiz par son ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
@@ -134,6 +179,13 @@ public class QuizController {
         System.out.println("getQuizById : " + id);
         return quizService.getQuizByIdAndUserId(id, uid);
     }
+
+    /**
+     * Issue11
+     * Endpoint pour modifier une question existante dans un quiz.
+     * Transmet les détails de mise à jour au service.
+     * Retourne un statut 204 sans contenu en cas de succès.
+     */
 
 
     @Operation(summary = "Modifier une question ou ses réponses")
@@ -150,6 +202,12 @@ public class QuizController {
         quizService.updateQuestion(quizId,questionId,newTitle,updateQuestionDTO.answers());
     }
 
+
+    /**
+     * Issue14
+     * Démarre un quiz en générant un code unique et vérifiant sa validité.
+     * Génère une URI d'exécution si le quiz est prêt et appartient à l'utilisateur.
+     */
     @Operation(summary = "Démarrer un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quiz démarré avec succès"),
@@ -191,6 +249,14 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
+    @GetMapping("/test/exec/{executionId}")
+    public ResponseEntity<?> testExecution(@AuthenticationPrincipal Jwt jwt,@PathVariable String executionId){
+        QuizDToRelease  quiz1 = quizService.getQuizByQuizCode(executionId);
+        if(quiz1 == null) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quiz not found");
+        }
+        return ResponseEntity.ok(quiz1);
+    }
 
 
 

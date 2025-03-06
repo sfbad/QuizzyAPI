@@ -2,8 +2,10 @@ package com.teamcocoon.QuizzyAPI.service;
 
 import com.teamcocoon.QuizzyAPI.exceptions.EntityNotFoundedException;
 import com.teamcocoon.QuizzyAPI.model.Question;
+import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.model.Response;
 import com.teamcocoon.QuizzyAPI.repositories.QuestionRepository;
+import com.teamcocoon.QuizzyAPI.repositories.QuizRepository;
 import com.teamcocoon.QuizzyAPI.repositories.ResponseRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ public class QuestionService {
     private static final Logger log = LoggerFactory.getLogger(QuestionService.class);
     private final QuestionRepository questionRepository;
     private final ResponseRepository responseRepository;
+    private final QuizRepository quizRepository;
 
     public Question saveQuestion(Question question) {
        return questionRepository.save(question);
@@ -59,5 +63,9 @@ public class QuestionService {
         Question updatedQuestion = getQuestionById(question.getQuestionId());
         updatedQuestion.setTitle(title);
         questionRepository.save(updatedQuestion);
+    }
+
+    public Optional<List<Question>> getQuestionsByQuizIdAndQuizCode(String quizCode) {
+        return questionRepository.findByQuiz_QuizCode(quizCode);
     }
 }
