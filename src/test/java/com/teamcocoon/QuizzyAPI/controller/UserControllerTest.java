@@ -5,6 +5,7 @@ import com.teamcocoon.QuizzyAPI.dtos.UserRequestDto;
 import com.teamcocoon.QuizzyAPI.dtos.UserResponseDto;
 import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
 import com.teamcocoon.QuizzyAPI.service.UserService;
+import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,23 +52,31 @@ class UserControllerTest {
     @Test
     @WithMockUser
     void shouldRegisterUserSuccessfully() throws Exception {
-        UserRequestDto requestDto = new UserRequestDto("testUser");
+        UserRequestDto user1 = new UserRequestDto("testUser");
 
         doNothing().when(userService).registerUser(any(String.class), any(String.class),any(String.class));
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto))
+                        .content(objectMapper.writeValueAsString(user1))
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
                 .andExpect(status().isCreated());
+
+        UserRequestDto user2 = new UserRequestDto(""); // Username vide
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user2))
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
+                .andExpect(status().isBadRequest()); // Vérifie qu'on reçoit un 400
     }
 
     @Test
     @WithMockUser
     void shouldReturnUserData() throws Exception {
-        UserResponseDto responseDto = new UserResponseDto("12345", "test@example.com", "testUser");
+        UserResponseDto user1 = new UserResponseDto("12345", "test@example.com", "testUser");
 
-        when(userService.getUserData(any(Jwt.class))).thenReturn(responseDto);
+        when(userService.getUserData(any(Jwt.class))).thenReturn(user1);
 
         mockMvc.perform(get("/api/users/me")
                         .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
@@ -75,5 +84,12 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.uid").value("12345"))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.username").value("testUser"));
+
+    }
+
+    @Test
+    void shouldReturn401WhenUserIsNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/users/me")) // pas de JWT
+                .andExpect(status().isUnauthorized());
     }
 }

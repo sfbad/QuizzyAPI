@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @Configuration
@@ -184,4 +185,16 @@ public class TestUtils {
             T body,
             Map<String, String> headers
     ) {}
+
+    public static void testProtectedEndpoint(String url) throws Exception {
+        // Cas où l'utilisateur est authentifié
+        mvc.perform(get(url)
+                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))) // JWT valide
+                .andExpect(status().isOk());
+
+        // Cas où l'utilisateur n'est PAS authentifié
+        mvc.perform(get(url)) // Aucune authentification
+                .andExpect(status().isUnauthorized());
+    }
+
 }
