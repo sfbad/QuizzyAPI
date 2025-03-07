@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,19 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ping", description = "Ping l'API")
 public class Ping {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     /**
      * Point de terminaison de vérification de l'état de santé de l'application.
-     *
      * Ce contrôleur fournit un mécanisme de ping simple pour :
      * - Vérifier que l'application est en cours d'exécution
      * - Vérifier l'état de base du système
      * - Renvoyer une réponse standardisée indiquant la santé du système
-     *
-     * Point de terminaison : GET /api/ping
-     * - Renvoie toujours un HTTP 200 avec un statut "OK" ou "KO"
-     * - Inclut des détails de base du système (actuellement l'état de la base de données)
-     * - Aide à la surveillance et aux diagnostics rapides de l'application
      */
     @Operation(summary = "Ping l'API")
     @ApiResponses(
@@ -39,10 +37,30 @@ public class Ping {
     @GetMapping
     public ResponseEntity<Object> ping() {
         try {
-            return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
+            boolean databaseHealthy = checkDatabaseHealth();
+
+            if (databaseHealthy) {
+                return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new PingResponse("KO", new PingDetails("KO")));
+            }
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new PingResponse("KO", new PingDetails("KO")));
+        }
+    }
+
+    /**
+     * Méthode pour vérifier l'état de la base de données en exécutant une simple requête.
+     */
+    private boolean checkDatabaseHealth() {
+        try {
+            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
