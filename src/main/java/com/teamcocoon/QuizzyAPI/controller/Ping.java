@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ping", description = "Ping l'API")
 public class Ping {
 
-    // Attribut pour simuler une erreur (pour les tests)
+    @Setter
     private boolean forceError = false;
 
     @Autowired
@@ -30,10 +29,7 @@ public class Ping {
 
 
 
-    // Méthode pour définir l'état de forceError (pour les tests)
-    public void setForceError(boolean forceError) {
-        this.forceError = forceError;
-    }
+
 
     /**
      * Point de terminaison de vérification de l'état de santé de l'application.
@@ -91,6 +87,7 @@ public class Ping {
         }
     }
 
+    @NoArgsConstructor
     public static class PingResponse {
         private String status;
         private PingDetails details;

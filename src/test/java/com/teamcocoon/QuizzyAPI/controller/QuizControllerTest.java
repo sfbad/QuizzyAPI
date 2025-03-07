@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDoc
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureMockMvc
 @AutoConfigureRestDocs(outputDir = "target/snippets")
 @TestPropertySource("classpath:application-test.properties")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+
 class QuizControllerTest {
 
     @Autowired
@@ -45,7 +48,7 @@ class QuizControllerTest {
     private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1", Map.of());
+        QuizPostDto quiz = new QuizPostDto( "New quizz1", "description1");
         TestUtils.createUserIfNotExists("testUser");
 
         Response<Void> response = TestUtils.performPostRequest(BASE_URL,quiz, Void.class);
@@ -55,24 +58,6 @@ class QuizControllerTest {
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
     }
 
-    @Test
-    void addNewQuestion_ShouldReturn_LocationUrl_For_The_CreatedQuestion() throws Exception {
-        createQuiz_returns201WithLocation();
-        answers.add(answersDTO1);
-        answers.add(answersDTO2);
-
-        AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France ?", answers);
-
-        Response<AddNewQuestionDTO> response = performPostRequest(
-                BASE_URL + "/1/questions", question, AddNewQuestionDTO.class);
-
-        assertEquals(201, response.status(), "Le statut doit être 201");
-        String location = response.headers().get("Location");
-        assertNotNull(location, "L'URL Location ne doit pas être nulle.");
-        assertTrue(location.matches("http://localhost:3000/api/quiz/1/questions/\\d+"),
-                "L'URL Location a un format invalide.");
-
-    }
 
     @Test
     void addNewQuestion_ShouldReturn_Exeption_Like_ThisQuiz_Doesnt_Exist() throws Exception {

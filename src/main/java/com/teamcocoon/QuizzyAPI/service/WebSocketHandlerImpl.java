@@ -325,8 +325,6 @@ public class WebSocketHandlerImpl extends TextWebSocketHandler {
                     executionSessionService.removeParticipant(session);
                     log.info("Participant removed: " + session.getId());
                 }
-
-                //updateStatus(executionId,"");
             }
         }
         super.afterConnectionClosed(session, status);

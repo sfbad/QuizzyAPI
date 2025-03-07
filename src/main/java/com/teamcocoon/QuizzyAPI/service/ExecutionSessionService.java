@@ -55,7 +55,6 @@ public class ExecutionSessionService {
         sendMessage(session, message);
     }
 
-    // Méthode pour envoyer un message texte à une session WebSocket
     private void sendMessage(WebSocketSession session, String message) throws Exception {
         if (session.isOpen()) {
             session.sendMessage(new TextMessage(message));

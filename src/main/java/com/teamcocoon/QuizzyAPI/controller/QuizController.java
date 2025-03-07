@@ -37,7 +37,6 @@ import java.util.Map;
 public class QuizController {
 
     private final QuizService quizService;
-    private final UserService userService;
 
 
     /**
@@ -104,13 +103,6 @@ public class QuizController {
 
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
-
-    /*@GetMapping("/{id}")
-    public ResponseEntity<QuizResponseDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id){
-        String uid = jwt.getClaim("sub");
-        System.out.println("getQuizById : " + id);
-        return quizService.getQuizByIdAndUserId(id, uid);
-    }*/
 
     /**
      * Point d'entrée REST pour la modification du titre d'un quiz.
@@ -241,14 +233,11 @@ public class QuizController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        // Générer un ID unique pour l'exécution du quiz
         String executionId = quizService.generateExecutionId();
         quiz.setQuizCode(executionId);
 
-        // Sauvegarder le quiz avec le code d'exécution
         quizService.saveQuiz(quiz);
 
-        // Construire l'URL de l'exécution
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .replacePath("/api/execution/{executionId}")
                 .buildAndExpand(executionId)

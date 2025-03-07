@@ -7,8 +7,7 @@ import jakarta.validation.constraints.*;
 import java.util.Map;
 
 @Builder
-public record QuizDto (@NotNull(message = "L'ID ne peut pas être nul")
-                        @Schema(description = "ID du quiz", example = "1")
+public record QuizDto (
                        Long id,
 
                        @Schema(description = "Titre du quiz", example = "Quiz sur les animaux")

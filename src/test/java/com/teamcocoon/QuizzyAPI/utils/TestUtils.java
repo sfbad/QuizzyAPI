@@ -167,7 +167,6 @@ public class TestUtils {
         headers.put("Location", result.getResponse().getHeader(HttpHeaders.LOCATION));
 
 
-        // Désérialiser le corps de la réponse JSON en objet du type `returnDtoClass`
         T responseObject = jsonResponse.isEmpty() ? null : mapper.readValue(jsonResponse, returnDtoClass);
 
         log.info("Response body: {}", responseObject);
@@ -186,15 +185,6 @@ public class TestUtils {
             Map<String, String> headers
     ) {}
 
-    public static void testProtectedEndpoint(String url) throws Exception {
-        // Cas où l'utilisateur est authentifié
-        mvc.perform(get(url)
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))) // JWT valide
-                .andExpect(status().isOk());
 
-        // Cas où l'utilisateur n'est PAS authentifié
-        mvc.perform(get(url)) // Aucune authentification
-                .andExpect(status().isUnauthorized());
-    }
 
 }

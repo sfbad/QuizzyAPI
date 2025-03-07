@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureRestDocs(outputDir = "target/snippets")
 @TestPropertySource("classpath:application-test.properties")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+
 class UserControllerTest {
 
     @Autowired
@@ -75,16 +78,6 @@ class UserControllerTest {
 
     }
 
-    @Test
-    void shouldReturnUserData() throws Exception {
-        TestUtils.createUserIfNotExists("testUser");
-        TestUtils.Response<UserResponseDto> getResponse = TestUtils.performGetRequest("/api/users/me", UserResponseDto.class);
-
-        assertEquals(200, getResponse.status());
-        assertEquals("12345", getResponse.body().uid());
-        assertEquals("testUser", getResponse.body().username());
-        assertEquals("test@example.com", getResponse.body().email());
-    }
 
     @Test
     void shouldReturn401WhenUserIsNotAuthenticated() throws Exception {

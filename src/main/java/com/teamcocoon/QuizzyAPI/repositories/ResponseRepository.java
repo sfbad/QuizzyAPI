@@ -11,9 +11,5 @@ import java.util.List;
 
 @Repository
 public interface ResponseRepository extends JpaRepository<Response, Long> {
-    @Modifying
-    @Query("DELETE FROM Response r WHERE r.question.questionId = :questionId")
-    void deleteAllByQuestion(Long questionId);
-
     List<Response> findResponseByQuestion_QuestionId(Long questionId);
 }

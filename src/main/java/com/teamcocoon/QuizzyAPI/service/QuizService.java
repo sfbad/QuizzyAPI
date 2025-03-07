@@ -51,18 +51,6 @@ public class QuizService {
     public ResponseEntity<ListQuizResponseDto> getListQuizByUserId(String uid) {
         List<Quiz> listQuiz = quizRepository.findListQuizByUserId(uid);
 
-//        listQuiz.forEach(quiz -> {
-//            System.out.println("zezezezezezez" + quiz.getTitle());
-//            System.out.println("taille des questions +++++ " +quiz.getQuestions().size());
-//            System.out.println("taille des responses ------ ");
-//            quiz.getQuestions().forEach(r-> {
-//
-//
-//                List<Response> responses = questionService.getResponsesByQuestion(r.getQuestionId());
-//                System.out.println("--- " + responses.size() + " ------");
-//
-//            });
-//        });
         List<QuizDto> quizDtoList = listQuiz.stream()
                 .map(quiz -> {
                     Map<String, String> links = new HashMap<>();
@@ -83,6 +71,7 @@ public class QuizService {
               chekForTitleValidity(quiz) &&
               chekForQuizzNotEmptyQuestionListValidity(quiz);
     }
+
     private boolean chekForTitleValidity(Quiz quiz) {
         return !quiz.getTitle().isEmpty();
     }
@@ -103,7 +92,6 @@ public class QuizService {
         if (question.getTitle() == null || question.getTitle().isEmpty() ) {
             return false;
         }
-        // Vérifiez qu'il y a au moins deux réponses.
         if (responses == null || responses.size() < 2) {
             return false;
         }
@@ -151,26 +139,6 @@ public class QuizService {
     }
 
 
-   /* public ResponseEntity<QuizResponseDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
-        System.out.println("idQuiz: " + idQuiz);
-
-        Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
-                .filter(q -> q.getUser().getUserId().equals(uid))
-                .orElseThrow(() -> new RuntimeException("Quiz not found"));
-
-        System.out.println("Quiz title: " + quiz.getTitle());
-
-        // Transformer les questions en DTOs pour n'envoyer que le titre
-        List<QuestionDto> questionDtos = quiz.getQuestions().stream()
-                .map(q -> new QuestionDto(q.getTitle()))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(QuizResponseDto.builder()
-                .title(quiz.getTitle())
-                .description(quiz.getDescription())
-                .questions(questionDtos)
-                .build());
-    }*/
 
     /**
      * Issue7
@@ -330,16 +298,12 @@ public class QuizService {
         List<Quiz> quizzes = quizRepository.findListQuizByUserId(userId);
         log.info("Quiz size "+quizzes.size()+"");
 
-        //boucle sur quizzes
         for (Quiz quiz : quizzes) {
-            // Si on trouve le quiz avec le même id
-            //log.info(quiz.getTitle());
             if (quiz.getQuizId().equals(quizId)) {
                 log.info(quiz.getTitle());
                 return quiz;
             }
         }
-        // Si on ne trouve pas de quiz avec le même id
         return null;
     }
 
@@ -349,13 +313,11 @@ public class QuizService {
      * return true si le quiz est complet, false sinon
      */
     public boolean isQuizReady(Quiz quiz) {
-        // Vérifier que le quiz a des questions
         System.out.println("question : " + quiz.getQuestions().size());
         if (quiz.getQuestions() == null || quiz.getQuestions().isEmpty()) {
             return false;
         }
 
-        // Vérifier que chaque question a au moins une réponse
         for (Question question : quiz.getQuestions()) {
             System.out.println("response size " +  question.getResponses().size());
             if (question.getResponses() == null || question.getResponses().isEmpty()) {
