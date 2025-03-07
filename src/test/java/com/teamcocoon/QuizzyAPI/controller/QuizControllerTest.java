@@ -49,7 +49,7 @@ class QuizControllerTest {
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
-        // Créer un quiz avec le méthode utilitaire
+        // Créer un quiz avec la méthode utilitaire
         Response<Void> response = TestUtils.performPostRequest(BASE_URL,quiz, Void.class);
 
         assertEquals(201, response.status(), "Le statut doit être 201");
@@ -260,6 +260,212 @@ class QuizControllerTest {
         assertEquals("http://127.0.0.1:3000/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
     }
 
+/*    @Test
+    void getListQuiz_returnsStartLinkForStartableQuizzes() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Create a quiz that should be startable
+        QuizDto quiz = new QuizDto(null, "Startable Quiz", "Test Description");
+        Response<QuizDto> createResponse = performPostRequest(BASE_URL, quiz, QuizDto.class);
+        assertEquals(201, createResponse.status(), "Quiz creation should return 201");
+
+        // Extract the quiz ID from the Location header
+        String location = createResponse.headers().get("Location");
+        assertNotNull(location, "Location URL should not be null");
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        // Add valid questions with correct answers to make the quiz startable
+        answers.clear();
+        answers.add(new AnswersDTO("Paris", true));
+        answers.add(new AnswersDTO("Lyon", false));
+
+        AddNewQuestionDTO question = new AddNewQuestionDTO("Quelle est la capitale de la France?", answers);
+        Response<AddNewQuestionDTO> questionResponse = performPostRequest(
+                BASE_URL + "/" + quizId + "/questions", question, AddNewQuestionDTO.class);
+        assertEquals(201, questionResponse.status(), "Question creation should return 201");
+
+        // Perform GET request to retrieve the list of quizzes
+        Response<ListQuizResponseLinkDto> response = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        // Verify response
+        assertEquals(200, response.status(), "Status should be 200 OK");
+        assertNotNull(response.body(), "Response body should not be null");
+        assertFalse(response.body().data().isEmpty(), "Quiz list should not be empty");
+
+        // Find the created quiz in the response
+        Optional<QuizLinkDto> startableQuiz = response.body().data().stream()
+                .filter(q -> q.title().equals("Startable Quiz"))
+                .findFirst();
+
+        assertTrue(startableQuiz.isPresent(), "Startable quiz should be in the response");
+        assertNotNull(startableQuiz.get()._links(), "Quiz links should not be null");
+        assertTrue(startableQuiz.get()._links().containsKey("start"),
+                "Startable quiz should have a 'start' link");
+        assertEquals("/api/quiz/" + quizId + "/start", startableQuiz.get()._links().get("start"),
+                "Start link should match expected URL");
+    }
+*/
+/*    @Test
+    void getListQuiz_doesNotReturnStartLinkForNonStartableQuizzes() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Create a quiz with no questions (non-startable)
+        QuizDto emptyQuiz = new QuizDto(null, "Empty Quiz", "No Questions");
+        Response<QuizDto> createResponse = performPostRequest(BASE_URL, emptyQuiz, QuizDto.class);
+        assertEquals(201, createResponse.status(), "Quiz creation should return 201");
+
+        // Create a quiz with invalid questions (no correct answer)
+        QuizDto invalidQuiz = new QuizDto(null, "Invalid Quiz", "Invalid Questions");
+        Response<QuizDto> createInvalidResponse = performPostRequest(BASE_URL, invalidQuiz, QuizDto.class);
+        assertEquals(201, createInvalidResponse.status(), "Quiz creation should return 201");
+
+        // Extract the quiz ID from the Location header
+        String location = createInvalidResponse.headers().get("Location");
+        assertNotNull(location, "Location URL should not be null");
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        // Add invalid question with no correct answer
+        List<AnswersDTO> invalidAnswers = new ArrayList<>();
+        invalidAnswers.add(new AnswersDTO("Wrong Answer 1", false));
+        invalidAnswers.add(new AnswersDTO("Wrong Answer 2", false));
+
+        AddNewQuestionDTO invalidQuestion = new AddNewQuestionDTO("Invalid Question", invalidAnswers);
+        Response<AddNewQuestionDTO> questionResponse = performPostRequest(
+                BASE_URL + "/" + quizId + "/questions", invalidQuestion, AddNewQuestionDTO.class);
+        assertEquals(201, questionResponse.status(), "Question creation should return 201");
+
+        // Perform GET request to retrieve the list of quizzes
+        Response<ListQuizResponseLinkDto> response = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        // Verify response
+        assertEquals(200, response.status(), "Status should be 200 OK");
+
+        // Check the empty quiz doesn't have a start link
+        Optional<QuizLinkDto> emptyQuizResult = response.body().data().stream()
+                .filter(q -> q.title().equals("Empty Quiz"))
+                .findFirst();
+
+        assertTrue(emptyQuizResult.isPresent(), "Empty quiz should be in the response");
+        assertTrue(!emptyQuizResult.get()._links().containsKey("start") ||
+                        emptyQuizResult.get()._links().get("start") == null,
+                "Non-startable quiz should not have a 'start' link");
+
+        // Check the invalid quiz doesn't have a start link
+        Optional<QuizLinkDto> invalidQuizResult = response.body().data().stream()
+                .filter(q -> q.title().equals("Invalid Quiz"))
+                .findFirst();
+
+        assertTrue(invalidQuizResult.isPresent(), "Invalid quiz should be in the response");
+        assertTrue(!invalidQuizResult.get()._links().containsKey("start") ||
+                        invalidQuizResult.get()._links().get("start") == null,
+                "Non-startable quiz should not have a 'start' link");
+    }
+*/
+/*    @Test
+    void getListQuiz_checksAllConditionsForStartableQuiz() throws Exception {
+        // Ensure user exists
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Create a quiz
+        QuizDto quiz = new QuizDto(null, "Condition Test Quiz", "Testing all conditions");
+        Response<QuizDto> createResponse = performPostRequest(BASE_URL, quiz, QuizDto.class);
+        String location = createResponse.headers().get("Location");
+        long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
+
+        // 1. Test with empty title
+        PatchQuizTitleRequestDTO emptyTitlePatch = PatchQuizTitleRequestDTO.builder()
+                .op("replace")
+                .path("/title")
+                .value("")
+                .build();
+
+        performPatchRequest(BASE_URL + "/" + quizId, emptyTitlePatch, Void.class);
+
+        // Add valid question
+        answers.clear();
+        answers.add(new AnswersDTO("Correct Answer", true));
+        answers.add(new AnswersDTO("Wrong Answer", false));
+
+        AddNewQuestionDTO question = new AddNewQuestionDTO("Valid Question", answers);
+        performPostRequest(BASE_URL + "/" + quizId + "/questions", question, AddNewQuestionDTO.class);
+
+        // Check that quiz with empty title is not startable
+        Response<ListQuizResponseLinkDto> response1 = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        Optional<QuizLinkDto> emptyTitleQuiz = response1.body().data().stream()
+                .filter(q -> q.id() == quizId)
+                .findFirst();
+
+        assertTrue(emptyTitleQuiz.isPresent(), "Quiz should be in response");
+        assertTrue(!emptyTitleQuiz.get()._links().containsKey("start") ||
+                        emptyTitleQuiz.get()._links().get("start") == null,
+                "Quiz with empty title should not have start link");
+
+        // 2. Restore title and test with multiple correct answers
+        PatchQuizTitleRequestDTO validTitlePatch = PatchQuizTitleRequestDTO.builder()
+                .op("replace")
+                .path("/title")
+                .value("Valid Title Quiz")
+                .build();
+
+        performPatchRequest(BASE_URL + "/" + quizId, validTitlePatch, Void.class);
+
+        // Add question with multiple correct answers
+        List<AnswersDTO> multipleCorrectAnswers = new ArrayList<>();
+        multipleCorrectAnswers.add(new AnswersDTO("Correct Answer 1", true));
+        multipleCorrectAnswers.add(new AnswersDTO("Correct Answer 2", true));
+
+        AddNewQuestionDTO invalidQuestion = new AddNewQuestionDTO("Multiple Correct Answers", multipleCorrectAnswers);
+        performPostRequest(BASE_URL + "/" + quizId + "/questions", invalidQuestion, AddNewQuestionDTO.class);
+
+        // Check that quiz with multiple correct answers is not startable
+        Response<ListQuizResponseLinkDto> response2 = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        Optional<QuizLinkDto> multipleCorrectQuiz = response2.body().data().stream()
+                .filter(q -> q.id() == quizId)
+                .findFirst();
+
+        assertTrue(multipleCorrectQuiz.isPresent(), "Quiz should be in response");
+        assertTrue(!multipleCorrectQuiz.get()._links().containsKey("start") ||
+                        multipleCorrectQuiz.get()._links().get("start") == null,
+                "Quiz with multiple correct answers should not have start link");
+
+        // 3. Create a fully valid quiz and check it has a start link
+        QuizDto validQuiz = new QuizDto(null, "Valid Quiz", "This quiz meets all conditions");
+        Response<QuizDto> validCreateResponse = performPostRequest(BASE_URL, validQuiz, QuizDto.class);
+        String validLocation = validCreateResponse.headers().get("Location");
+        long validQuizId = Long.parseLong(validLocation.substring(validLocation.lastIndexOf("/") + 1));
+
+        // Add valid question
+        List<AnswersDTO> validAnswers = new ArrayList<>();
+        validAnswers.add(new AnswersDTO("Correct Answer", true));
+        validAnswers.add(new AnswersDTO("Wrong Answer 1", false));
+        validAnswers.add(new AnswersDTO("Wrong Answer 2", false));
+
+        AddNewQuestionDTO validQuestionDto = new AddNewQuestionDTO("Valid Question", validAnswers);
+        performPostRequest(BASE_URL + "/" + validQuizId + "/questions", validQuestionDto, AddNewQuestionDTO.class);
+
+        // Check that valid quiz is startable
+        Response<ListQuizResponseLinkDto> response3 = performGetRequest(
+                BASE_URL, ListQuizResponseLinkDto.class);
+
+        Optional<QuizLinkDto> validQuizResult = response3.body().data().stream()
+                .filter(q -> q.title().equals("Valid Quiz"))
+                .findFirst();
+
+        assertTrue(validQuizResult.isPresent(), "Valid quiz should be in response");
+        assertTrue(validQuizResult.get()._links().containsKey("start"),
+                "Valid quiz should have a start link");
+        assertEquals("/api/quiz/" + validQuizId + "/start", validQuizResult.get()._links().get("start"),
+                "Start link should match expected URL");
+    }
+*/
 }
 
 
