@@ -1,6 +1,9 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,14 +33,20 @@ public class Ping {
      * - Aide à la surveillance et aux diagnostics rapides de l'application
      */
     @Operation(summary = "Ping l'API")
-    @ApiResponses(
-            {
-                    @ApiResponse(responseCode = "200", description = "API est en ligne"),
-                    @ApiResponse(responseCode = "500", description = "API est hors ligne")
-            }
-    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "API est en ligne",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PingResponse.class),
+                            examples = @ExampleObject(name = "Exemple de succès",
+                                    value = "{ \"status\": \"OK\", \"details\": { \"message\": \"OK\" } }"))),
+            @ApiResponse(responseCode = "500", description = "API est hors ligne",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PingResponse.class),
+                            examples = @ExampleObject(name = "Exemple d'erreur",
+                                    value = "{ \"status\": \"KO\", \"details\": { \"message\": \"KO\" } }")))
+    })
     @GetMapping
-    public ResponseEntity<Object> ping() {
+    public ResponseEntity<PingResponse> ping() {
         try {
             return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
         } catch (Exception e) {

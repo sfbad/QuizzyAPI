@@ -182,47 +182,30 @@ public class QuizService {
      * throws RuntimeException si le quiz n'existe pas ou n'appartient pas à l'utilisateur
      */
     public ResponseEntity<ListQuestionsDto> getQuizByIdAndUserId(Long idQuiz, String uid) {
-        log.info("Recuperation du quizz : " + idQuiz);
+        log.info("Récupération du quiz : " + idQuiz);
+
         Quiz quiz = quizRepository.findByIdWithQuestions(idQuiz)
                 .filter(q -> q.getUser().getUserId().equals(uid))
-                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+                .orElseThrow(() -> new EntityNotFoundedException("Quiz not found or unauthorized"));
 
-        //System.out.println("Quiz title: " + quiz.getTitle());
-        List<Question> questions = quiz.getQuestions();
         List<QuestionAnswersDto> questionDtoss = new ArrayList<>();
 
-
-        questions.forEach(question -> {
+        quiz.getQuestions().forEach(question -> {
             List<Response> responses = questionService.getResponsesByQuestion(question.getQuestionId());
-            List<AnswersDTO> answersDtos = new ArrayList<>();
+            List<AnswersDTO> answersDtos = responses.stream()
+                    .map(response -> AnswersDTO.builder()
+                            .title(response.getTitle())
+                            .isCorrect(response.isCorrect())
+                            .build())
+                    .toList();
 
-            responses.forEach(response -> {
-                AnswersDTO answersDTO = AnswersDTO.builder()
-                        .title(response.getTitle())
-                        .isCorrect(response.isCorrect())
-                        .build();
-                answersDtos.add(answersDTO);
-            });
-            QuestionAnswersDto questionAnswersDto = QuestionAnswersDto.builder()
+            questionDtoss.add(QuestionAnswersDto.builder()
                     .title(question.getTitle())
                     .answers(answersDtos)
-                    .build();
-
-            questionDtoss.add(questionAnswersDto);
+                    .build());
         });
 
-//        List<QuestionAnswersDto> questionDtos = quiz.getQuestions().stream()
-//                .map(q -> QuestionAnswersDto.builder()
-//                        .title(q.getTitle())
-//                        .answers(q.getResponses().stream()
-//                                .map(r -> AnswersDTO.builder()
-//                                        .title(r.getTitle())
-//                                        .isCorrect(r.isCorrect())
-//                                        .build())
-//                                .collect(Collectors.toList()))
-//                        .build())
-//                .collect(Collectors.toList());
-        log.info("Envoie de la liste aves ces questions  : " + questionDtoss);
+        log.info("Envoi de la liste avec ses questions : " + questionDtoss);
 
         return ResponseEntity.ok(ListQuestionsDto.builder()
                 .title(quiz.getTitle())
@@ -230,6 +213,7 @@ public class QuizService {
                 .questions(questionDtoss)
                 .build());
     }
+
 
 
     public Quiz getQuizById(Long idQuiz) {

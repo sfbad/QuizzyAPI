@@ -40,13 +40,17 @@ public class UserService {
         }
         String uid = jwt.getClaim("sub");
         String email = jwt.getClaim("email");
-        if (uid == null || email == null) {
+        if (uid == null || email == null || uid.isBlank() || email.isBlank()) {
             throw new AuthentificationException("Invalid authentication token");
         }
         User user = getUserByUID(uid);
         return new UserResponseDto(user.getUserId(), email, user.getUsername());
     }
     public User getUserByUID(String uid) {
+        if (uid == null || uid.isBlank()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
+
         return userRepository.findById(uid)
                 .orElseThrow(() -> new EntityNotFoundedException("User not found"));
     }

@@ -5,6 +5,8 @@ import com.teamcocoon.QuizzyAPI.exceptions.EntityNotFoundedException;
 import com.teamcocoon.QuizzyAPI.model.Quiz;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -44,7 +47,7 @@ public class QuizController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Récupérer la liste des quiz de l'utilisateur")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Liste des quiz récupérée avec succès")
+            @ApiResponse(responseCode = "200", description = "Liste des quiz récupérée avec succès", content = @Content(schema = @Schema(implementation = ListQuizResponseDto.class)))
     })
     @GetMapping()
     public ResponseEntity<?> getListQuiz(@AuthenticationPrincipal Jwt jwt) {
@@ -119,7 +122,7 @@ public class QuizController {
     @Operation(summary = "Mettre à jour le titre d'un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Titre du quiz mis à jour avec succès"),
-            @ApiResponse(responseCode = "404", description = "Quiz inexistant ou non autorisé")
+            @ApiResponse(responseCode = "404", description = "Quiz inexistant ou non autorisé", content = @Content(schema = @Schema(implementation = ExceptionsResponseDTO.class)))
     })
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateQuizTitle(
@@ -150,7 +153,11 @@ public class QuizController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Ajouter une question à un quiz")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Question ajoutée avec succès"),
+
+            // status 201 et header location
+            @ApiResponse(responseCode = "201", description = "Question ajoutée avec succès", headers = {
+                    @io.swagger.v3.oas.annotations.headers.Header(name = "Location", description = "URI de la nouvelle question", schema = @Schema(type = "string"))
+            }),
    })
     @PostMapping("/{id}/questions")
     public ResponseEntity<?> addNewQuestion( @AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id, @Valid @RequestBody AddNewQuestionDTO question){
@@ -177,7 +184,7 @@ public class QuizController {
     @Operation(summary = "Récupérer un quiz par son ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
-            @ApiResponse(responseCode = "404", description = "Quiz non trouvé")
+            @ApiResponse(responseCode = "404", description = "Quiz non trouvé ou non autorisé", content = @Content(schema = @Schema(implementation = ExceptionsResponseDTO.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<ListQuestionsDto> getQuizById(@AuthenticationPrincipal Jwt jwt, @Valid @PathVariable Long id){
@@ -196,7 +203,7 @@ public class QuizController {
     @Operation(summary = "Modifier une question ou ses réponses")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Question modifiée avec succès"),
-            @ApiResponse(responseCode = "404", description = "Question ou quiz non trouvé")
+            @ApiResponse(responseCode = "404", description = "Question ou quiz non trouvé", content = @Content(schema = @Schema(implementation = ExceptionsResponseDTO.class)))
     })
     @PutMapping("/{quizId}/questions/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -217,8 +224,8 @@ public class QuizController {
     @Operation(summary = "Démarrer un quiz")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quiz démarré avec succès"),
-            @ApiResponse(responseCode = "400", description = "Quiz non prêt"),
-            @ApiResponse(responseCode = "404", description = "Quiz introuvable ou non autorisé")
+            @ApiResponse(responseCode = "400", description = "Quiz non prêt", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Quiz introuvable ou non autorisé", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/{quizId}/start")
     public ResponseEntity<Void> startQuiz(@AuthenticationPrincipal Jwt jwt, @PathVariable Long quizId) {
