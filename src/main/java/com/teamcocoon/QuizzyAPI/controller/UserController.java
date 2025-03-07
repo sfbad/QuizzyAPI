@@ -50,7 +50,7 @@ public class UserController {
     @Operation(summary = "Récupérer les données de l'utilisateur")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Données de l'utilisateur récupérées"),
-            @ApiResponse(responseCode = "401", description = "Non autorisé")
+            @ApiResponse(responseCode = "401", description = "Non autorisé", content = @io.swagger.v3.oas.annotations.media.Content),
     })
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getUserData(@AuthenticationPrincipal Jwt jwt) {
