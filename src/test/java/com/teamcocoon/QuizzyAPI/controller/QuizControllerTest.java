@@ -161,19 +161,16 @@ class QuizControllerTest {
                 .path("/title")
                 .value("New Title")
                 .build();
+        List<PatchQuizTitleRequestDTO> listPatchRequest = List.of(patchRequest);
 
-        // Effectuer le PATCH via performRequest
         Response<Void> patchResponse = performPatchRequest(
-                BASE_URL + "/" + quizId, patchRequest,Void.class);
+                BASE_URL + "/" + quizId, listPatchRequest,Void.class);
 
-        // Vérifier que le statut de la réponse est "No Content" (204)
         assertEquals(204, patchResponse.status(), "Le statut du PATCH doit être 204");
 
-        // Récupérer le quiz après la mise à jour
         Response<QuizResponseDto> getResponse = performGetRequest(
                 BASE_URL + "/" + quizId, QuizResponseDto.class);
 
-        // Vérifier la mise à jour du titre
         QuizResponseDto updatedQuiz = getResponse.body();
         assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
     }

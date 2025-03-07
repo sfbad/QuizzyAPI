@@ -255,23 +255,5 @@ public class QuizController {
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Récupérer un quiz par son code d'exécution")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Quiz récupéré avec succès"),
-            @ApiResponse(responseCode = "404", description = "Quiz introuvable ou non autorisé"),
-            @ApiResponse(responseCode = "400", description = "Quiz non prêt")
-    })
-    @GetMapping("/test/exec/{executionId}")
-    public ResponseEntity<?> testExecution(@AuthenticationPrincipal Jwt jwt,@PathVariable String executionId){
-        QuizDToRelease  quiz1 = quizService.getQuizByQuizCode(executionId);
-        if(quiz1 == null) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Quiz not found");
-        }
-        return ResponseEntity.ok(quiz1);
-    }
-
-
-
 
 }
