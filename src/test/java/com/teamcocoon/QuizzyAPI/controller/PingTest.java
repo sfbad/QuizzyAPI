@@ -33,6 +33,7 @@ class PingControllerTest {
     @Autowired
     private ApplicationContext applicationContext;
 
+
     @Test
     void ping_whenApplicationIsHealthy_returns200WithOkStatus() throws Exception {
         // Loggez des informations utiles pour le débogage

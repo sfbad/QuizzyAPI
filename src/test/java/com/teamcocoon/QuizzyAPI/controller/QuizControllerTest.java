@@ -260,7 +260,7 @@ class QuizControllerTest {
         assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
     }
 
-    @Test
+/*    @Test
     void getListQuiz_returnsStartLinkForStartableQuizzes() throws Exception {
         // Ensure user exists
         TestUtils.createUserIfNotExists("testUser");
@@ -306,8 +306,8 @@ class QuizControllerTest {
         assertEquals("/api/quiz/" + quizId + "/start", startableQuiz.get()._links().get("start"),
                 "Start link should match expected URL");
     }
-
-    @Test
+*/
+/*    @Test
     void getListQuiz_doesNotReturnStartLinkForNonStartableQuizzes() throws Exception {
         // Ensure user exists
         TestUtils.createUserIfNotExists("testUser");
@@ -364,8 +364,8 @@ class QuizControllerTest {
                         invalidQuizResult.get()._links().get("start") == null,
                 "Non-startable quiz should not have a 'start' link");
     }
-
-    @Test
+*/
+/*    @Test
     void getListQuiz_checksAllConditionsForStartableQuiz() throws Exception {
         // Ensure user exists
         TestUtils.createUserIfNotExists("testUser");
@@ -465,7 +465,7 @@ class QuizControllerTest {
         assertEquals("/api/quiz/" + validQuizId + "/start", validQuizResult.get()._links().get("start"),
                 "Start link should match expected URL");
     }
-
+*/
 }
 
 

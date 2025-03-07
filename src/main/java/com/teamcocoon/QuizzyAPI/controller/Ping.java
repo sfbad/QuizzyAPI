@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +61,7 @@ public class Ping {
         }
     }
 
+    @NoArgsConstructor
     public static class PingResponse {
         private String status;
         private PingDetails details;
@@ -85,6 +88,7 @@ public class Ping {
         }
     }
 
+    @NoArgsConstructor
     public static class PingDetails {
         private String database;
 
