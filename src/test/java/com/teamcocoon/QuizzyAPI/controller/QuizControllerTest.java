@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 import static com.teamcocoon.QuizzyAPI.utils.TestUtils.*;
@@ -44,7 +45,7 @@ class QuizControllerTest {
     private final String BASE_URL = "/api/quiz";
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
-        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1");
+        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1", Map.of());
         // Créer un utilisateur si non existant
         TestUtils.createUserIfNotExists("testUser");
 
@@ -111,7 +112,7 @@ class QuizControllerTest {
 
     @Test
     void getQuizById() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2");
+        QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2", Map.of());
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest
@@ -139,7 +140,7 @@ class QuizControllerTest {
 
     @Test
     void updateQuizTitle() throws Exception {
-        QuizDto quiz = new QuizDto(-1L, "Old title", "description3");
+        QuizDto quiz = new QuizDto(-1L, "Old title", "description3", Map.of());
         TestUtils.createUserIfNotExists("testUser");
 
         // Créer un quiz via la méthode performRequest
@@ -200,8 +201,8 @@ class QuizControllerTest {
         TestUtils.createUserIfNotExists("testUser");
 
         // Create multiple quizzes
-        QuizDto quiz1 = new QuizDto(null, "Quiz 1", "Description 1");
-        QuizDto quiz2 = new QuizDto(null, "Quiz 2", "Description 2");
+        QuizDto quiz1 = new QuizDto(null, "Quiz 1", "Description 1", Map.of());
+        QuizDto quiz2 = new QuizDto(null, "Quiz 2", "Description 2", Map.of());
 
         // Create first quiz
         Response<QuizDto> createResponse1 = performPostRequest(
@@ -242,7 +243,7 @@ class QuizControllerTest {
         TestUtils.createUserIfNotExists("testUser");
 
         // Create a quiz
-        QuizDto quiz = new QuizDto(null, "Test Quiz", "Test Description");
+        QuizDto quiz = new QuizDto(null, "Test Quiz", "Test Description", Map.of());
         performPostRequest(BASE_URL, quiz, QuizDto.class);
 
         // Perform GET request
