@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ping", description = "Ping l'API")
 public class Ping {
 
+    // Attribut pour simuler une erreur (pour les tests)
+    private boolean forceError = false;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -36,9 +39,19 @@ public class Ping {
                     @ApiResponse(responseCode = "500", description = "API est hors ligne")
             }
     )
+
+    // Méthode pour définir l'état de forceError (pour les tests)
+    public void setForceError(boolean forceError) {
+        this.forceError = forceError;
+    }
+
     @GetMapping
     public ResponseEntity<Object> ping() {
         try {
+            // Si forceError est true, simuler une erreur
+            if (forceError) {
+                throw new RuntimeException("Erreur simulée pour les tests");
+            }
             return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -46,6 +59,7 @@ public class Ping {
         }
     }
 
+    @NoArgsConstructor
     public static class PingResponse {
         private String status;
         private PingDetails details;
