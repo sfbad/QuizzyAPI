@@ -48,18 +48,33 @@ public class Ping {
     @GetMapping
     public ResponseEntity<Object> ping() {
         try {
-            // Si forceError est true, simuler une erreur
-            if (forceError) {
-                throw new RuntimeException("Erreur simulée pour les tests");
+            boolean databaseHealthy = checkDatabaseHealth();
+
+            if (databaseHealthy) {
+                return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new PingResponse("KO", new PingDetails("KO")));
             }
-            return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new PingResponse("KO", new PingDetails("KO")));
         }
     }
 
-    @NoArgsConstructor
+    /**
+     * Méthode pour vérifier l'état de la base de données en exécutant une simple requête.
+     */
+    private boolean checkDatabaseHealth() {
+        try {
+            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public static class PingResponse {
         private String status;
         private PingDetails details;
