@@ -135,7 +135,7 @@ public class QuizService {
      * - Associe le quiz au bon utilisateur
      * - Génère une URI de localisation pour accéder au quiz créé
      */
-    public Quiz createQuiz(QuizDto quizDto, String uid) {
+    public Quiz createQuiz(QuizPostDto quizDto, String uid) {
         System.out.println("UID reçu : " + uid);
 
         User user = userService.getUserByUID(uid);
