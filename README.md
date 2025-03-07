@@ -30,8 +30,10 @@ mvn spring-boot:run
 Ou de lancer la classe QuizzyApiApplication.java dans votre IDE.
 (Editer un run configuration et ajouter la classe QuizzyApiApplication)
 
-## Utilisation
+## Utilisation / Swagger
 Pour utiliser l'API, il suffit de se rendre sur http://localhost:3000/swagger-ui.html
+
+Cliquer sur le bouton Authorize et ajouter le token JWT pour pouvoir accéder aux routes sécurisées.
 
 ## Tests
 Pour lancer les tests, il suffit de lancer la commande suivante :
