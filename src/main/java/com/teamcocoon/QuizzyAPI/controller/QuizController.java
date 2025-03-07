@@ -81,7 +81,7 @@ public class QuizController {
             @ApiResponse(responseCode = "201", description = "Quiz créé avec succès")
     })
     @PostMapping()
-    public ResponseEntity<Void> createQuiz(@RequestBody QuizDto quizDto, @AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<Void> createQuiz(@RequestBody QuizPostDto quizDto, @AuthenticationPrincipal Jwt jwt){
         if (jwt == null) {
             throw new IllegalStateException("Jwt is null");
         }
