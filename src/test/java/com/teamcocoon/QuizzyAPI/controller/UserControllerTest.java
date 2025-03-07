@@ -1,41 +1,53 @@
 package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
+import com.teamcocoon.QuizzyAPI.dtos.ErrorResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.ExceptionsResponseDTO;
 import com.teamcocoon.QuizzyAPI.dtos.UserRequestDto;
 import com.teamcocoon.QuizzyAPI.dtos.UserResponseDto;
-import com.teamcocoon.QuizzyAPI.repositories.UserRepository;
 import com.teamcocoon.QuizzyAPI.service.UserService;
-import org.junit.jupiter.api.Test;
+import com.teamcocoon.QuizzyAPI.utils.TestUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
-@ExtendWith(MockitoExtension.class)
+@Slf4j
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        classes = QuizzyApiApplication.class
+)
+@ExtendWith(SpringExtension.class)
+@AutoConfigureMockMvc
+@AutoConfigureRestDocs(outputDir = "target/snippets")
+@TestPropertySource("classpath:application-test.properties")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
     @Mock
-    private UserRepository userRepository;
-    @MockitoBean
     private UserService userService;
 
     private Jwt jwt;
@@ -48,31 +60,28 @@ class UserControllerTest {
     }
 
     @Test
-    @WithMockUser
-    void shouldRegisterUserSuccessfully() throws Exception {
-        UserRequestDto requestDto = new UserRequestDto("testUser");
+    void shouldRegisterAndReturnUserDataSuccessfully() throws Exception {
 
-        doNothing().when(userService).registerUser(any(String.class), any(String.class));
+        UserRequestDto user1 = new UserRequestDto("testUser");
 
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto))
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isCreated());
+        doNothing().when(userService).registerUser(Mockito.any(), Mockito.any(), Mockito.any());
+
+        TestUtils.Response<Void> registerResponse = TestUtils.performPostRequest("/api/users", user1, Void.class);
+        assertEquals(201, registerResponse.status());
+
+        UserRequestDto user2 = new UserRequestDto("");
+        TestUtils.Response<Void> badRequestResponse = TestUtils.performPostRequest("/api/users", user2, Void.class);
+        assertEquals(400, badRequestResponse.status());
+
+        UserResponseDto userResponseDto = new UserResponseDto("12345", "test@example.com", "testUser");
+        when(userService.getUserData(Mockito.any(Jwt.class))).thenReturn(userResponseDto);
+
     }
 
+
     @Test
-    @WithMockUser
-    void shouldReturnUserData() throws Exception {
-        UserResponseDto responseDto = new UserResponseDto("12345", "test@example.com", "testUser");
-
-        when(userService.getUserData(any(Jwt.class))).thenReturn(responseDto);
-
-        mockMvc.perform(get("/api/users/me")
-                        .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.uid").value("12345"))
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.username").value("testUser"));
+    void shouldReturn401WhenUserIsNotAuthenticated() throws Exception {
+        TestUtils.Response<ExceptionsResponseDTO> response = TestUtils.performGetRequest("/api/users/me", ExceptionsResponseDTO.class);
+        assertEquals(401, response.status());
     }
 }

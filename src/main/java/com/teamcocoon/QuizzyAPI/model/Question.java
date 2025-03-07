@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Builder
 @NoArgsConstructor
@@ -21,4 +24,17 @@ public class Question {
 
     @ManyToOne
     private Quiz quiz;
+
+    @OneToMany
+    private List<Response> responses;
+
+    @Override
+    public String toString() {
+        return "Question{" +
+                "questionId=" + questionId +
+                ", title='" + title + '\'' +
+                ", quiz=" + quiz +
+                ", responses=" + responses +
+                '}';
+    }
 }

@@ -21,15 +21,17 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void registerUser(String uid, String username) {
+    public void registerUser(String uid, String username,String email) {
         Optional<User> existingUser = userRepository.findByUsername(username);
         if (existingUser.isPresent()) {
             throw new EntityAlreadyExists("Username already exists");
         }
 
+
         User user = new User();
         user.setUserId(uid);
         user.setUsername(username);
+        user.setEmail(email);
         userRepository.save(user);
     }
     public UserResponseDto getUserData(Jwt jwt) {
@@ -38,13 +40,17 @@ public class UserService {
         }
         String uid = jwt.getClaim("sub");
         String email = jwt.getClaim("email");
-        if (uid == null || email == null) {
+        if (uid == null || email == null || uid.isBlank() || email.isBlank()) {
             throw new AuthentificationException("Invalid authentication token");
         }
         User user = getUserByUID(uid);
         return new UserResponseDto(user.getUserId(), email, user.getUsername());
     }
     public User getUserByUID(String uid) {
+        if (uid == null || uid.isBlank()) {
+            throw new IllegalArgumentException("User ID cannot be null or empty");
+        }
+
         return userRepository.findById(uid)
                 .orElseThrow(() -> new EntityNotFoundedException("User not found"));
     }
