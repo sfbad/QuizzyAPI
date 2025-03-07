@@ -2,6 +2,8 @@ package com.teamcocoon.QuizzyAPI.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
+import com.teamcocoon.QuizzyAPI.dtos.ErrorResponseDto;
+import com.teamcocoon.QuizzyAPI.dtos.ExceptionsResponseDTO;
 import com.teamcocoon.QuizzyAPI.dtos.UserRequestDto;
 import com.teamcocoon.QuizzyAPI.dtos.UserResponseDto;
 import com.teamcocoon.QuizzyAPI.service.UserService;
@@ -55,35 +57,38 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldRegisterUserSuccessfully() throws Exception {
-        UserRequestDto user1 = new UserRequestDto("testUser");
-        doNothing().when(userService).registerUser(Mockito.any(), Mockito.any(), Mockito.any());
-        TestUtils.Response<Void> response = TestUtils.performPostRequest("/api/users", user1, Void.class);
+    void shouldRegisterAndReturnUserDataSuccessfully() throws Exception {
 
-        assertEquals(201, response.status());
+        UserRequestDto user1 = new UserRequestDto("testUser");
+
+        doNothing().when(userService).registerUser(Mockito.any(), Mockito.any(), Mockito.any());
+
+        TestUtils.Response<Void> registerResponse = TestUtils.performPostRequest("/api/users", user1, Void.class);
+        assertEquals(201, registerResponse.status());
+
         UserRequestDto user2 = new UserRequestDto("");
         TestUtils.Response<Void> badRequestResponse = TestUtils.performPostRequest("/api/users", user2, Void.class);
         assertEquals(400, badRequestResponse.status());
+
+        UserResponseDto userResponseDto = new UserResponseDto("12345", "test@example.com", "testUser");
+        when(userService.getUserData(Mockito.any(Jwt.class))).thenReturn(userResponseDto);
+
     }
 
     @Test
     void shouldReturnUserData() throws Exception {
-        UserResponseDto user1 = new UserResponseDto("12345", "test@example.com", "testUser");
+        TestUtils.createUserIfNotExists("testUser");
+        TestUtils.Response<UserResponseDto> getResponse = TestUtils.performGetRequest("/api/users/me", UserResponseDto.class);
 
-        when(userService.getUserData(Mockito.any(Jwt.class))).thenReturn(user1);
-        TestUtils.Response<UserResponseDto> response = TestUtils.performGetRequest("/api/users/me", UserResponseDto.class);
-
-        assertEquals(200, response.status());
-        assertEquals("12345", response.body().uid());
-        assertEquals("testUser", response.body().username());
+        assertEquals(200, getResponse.status());
+        assertEquals("12345", getResponse.body().uid());
+        assertEquals("testUser", getResponse.body().username());
+        assertEquals("test@example.com", getResponse.body().email());
     }
 
     @Test
     void shouldReturn401WhenUserIsNotAuthenticated() throws Exception {
-        // Effectuer une requête GET sans authentification
-        TestUtils.Response<Void> response = TestUtils.performGetRequest("/api/users/me", Void.class);
-
-        // Vérification du code 401 pour "Unauthorized"
+        TestUtils.Response<ExceptionsResponseDTO> response = TestUtils.performGetRequest("/api/users/me", ExceptionsResponseDTO.class);
         assertEquals(401, response.status());
     }
 }

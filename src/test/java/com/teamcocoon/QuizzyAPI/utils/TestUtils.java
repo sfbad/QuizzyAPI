@@ -75,13 +75,13 @@ public class TestUtils {
                             .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andReturn();
-        } else if ("PUT".equalsIgnoreCase(typeRequest)) {
+        } else if (PUT.equalsIgnoreCase(typeRequest)) {
             return mvc.perform(put(rootPath)
                             .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsString(data)))
                     .andReturn();
-        } else if ("PATCH".equalsIgnoreCase(typeRequest)) {
+        } else if (PATCH.equalsIgnoreCase(typeRequest)) {
             return mvc.perform(patch(rootPath)
                             .with(jwt().jwt(jwt -> jwt.claim("sub", "testUser")))
                             .contentType(MediaType.APPLICATION_JSON)

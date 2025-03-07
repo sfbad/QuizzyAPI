@@ -1,7 +1,6 @@
 package com.teamcocoon.QuizzyAPI.controller;  // Remplacez par votre package réel
 
 import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
-import com.teamcocoon.QuizzyAPI.controller.Ping;
 import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
