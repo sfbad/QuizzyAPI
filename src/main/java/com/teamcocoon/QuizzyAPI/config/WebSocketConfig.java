@@ -1,5 +1,6 @@
 package com.teamcocoon.QuizzyAPI.config;
 
+import com.teamcocoon.QuizzyAPI.service.ExecutionSessionService;
 import com.teamcocoon.QuizzyAPI.service.QuestionService;
 import com.teamcocoon.QuizzyAPI.service.QuizService;
 import com.teamcocoon.QuizzyAPI.service.WebSocketHandlerImpl;
@@ -15,13 +16,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private QuizService quizService;
     @Autowired
     private QuestionService questionService;
-    @Bean
-    public WebSocketConfigurator webSocketConfigurator() {
-        return new WebSocketConfigurator();
-    }
-
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new WebSocketHandlerImpl(quizService, questionService), "/");
+        registry.addHandler(new WebSocketHandlerImpl(quizService, questionService), "/")
+                .setAllowedOrigins("http://localhost:4200");
     }
 }

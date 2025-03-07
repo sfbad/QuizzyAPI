@@ -4,5 +4,5 @@ import lombok.Builder;
 
 import java.util.List;
 @Builder
-public record NextQuestionWSDTO(QuestionTitleDTO question, List<ResponseTitleDTO> answers) {
+public record NextQuestionWSDTO(String question, List<String> answers) {
 }
