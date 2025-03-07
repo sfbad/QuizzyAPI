@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,29 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Ping", description = "Ping l'API")
 public class Ping {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     /**
      * Point de terminaison de vérification de l'état de santé de l'application.
-     *
      * Ce contrôleur fournit un mécanisme de ping simple pour :
      * - Vérifier que l'application est en cours d'exécution
      * - Vérifier l'état de base du système
      * - Renvoyer une réponse standardisée indiquant la santé du système
-     *
-     * Point de terminaison : GET /api/ping
-     * - Renvoie toujours un HTTP 200 avec un statut "OK" ou "KO"
-     * - Inclut des détails de base du système (actuellement l'état de la base de données)
-     * - Aide à la surveillance et aux diagnostics rapides de l'application
      */
-
-    // Attribut pour simuler une erreur (pour les tests)
-    private boolean forceError = false;
-
-    // Méthode pour définir l'état de forceError (pour les tests)
-    public void setForceError(boolean forceError) {
-        this.forceError = forceError;
-    }
-
     @Operation(summary = "Ping l'API")
     @ApiResponses(
             {
@@ -50,10 +39,6 @@ public class Ping {
     @GetMapping
     public ResponseEntity<Object> ping() {
         try {
-            // Si forceError est true, simuler une erreur
-            if (forceError) {
-                throw new RuntimeException("Erreur simulée pour les tests");
-            }
             return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -61,7 +46,6 @@ public class Ping {
         }
     }
 
-    @NoArgsConstructor
     public static class PingResponse {
         private String status;
         private PingDetails details;
