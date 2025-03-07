@@ -234,7 +234,7 @@ class QuizControllerTest {
         // Verify links
         assertNotNull(response.body()._links(), "Links map should not be null");
         assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
-        assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should be correct");
+        assertEquals("http://127.0.0.1:3000/api/quiz", response.body()._links().get("create"), "Create link should be correct");
     }
 
     @Test
@@ -257,7 +257,7 @@ class QuizControllerTest {
 
         // Verify specific links
         assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
-        assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
+        assertEquals("http://127.0.0.1:3000/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
     }
 
 }
