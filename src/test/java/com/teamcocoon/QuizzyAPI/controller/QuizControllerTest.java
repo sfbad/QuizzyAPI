@@ -5,6 +5,7 @@ import com.teamcocoon.QuizzyAPI.QuizzyApiApplication;
 import com.teamcocoon.QuizzyAPI.dtos.*;
 import com.teamcocoon.QuizzyAPI.utils.TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,22 @@ class QuizControllerTest {
     private AnswersDTO answersDTO1 = new AnswersDTO("Paris", true);
     private AnswersDTO answersDTO2 = new AnswersDTO("Italie", false);
     private final String BASE_URL = "/api/quiz";
+
+
+    @BeforeEach
+    void setUp() throws Exception {
+        // Initialisation des données de test
+        TestUtils.createUserIfNotExists("testUser");
+
+        // Création d'un quiz basic
+        QuizDto quiz = new QuizDto(1L, "New quizz1", "description1", Map.of());
+
+        // Réinitialisation des réponses pour les questions
+        answers = new ArrayList<>();
+        answersDTO1 = new AnswersDTO("Paris", true);
+        answersDTO2 = new AnswersDTO("Lyon", false);
+    }
+
     @Test
     void createQuiz_returns201WithLocation() throws Exception {
         QuizDto quiz = new QuizDto(1L, "New quizz1", "description1", Map.of());
@@ -115,23 +132,18 @@ class QuizControllerTest {
         QuizDto quiz = new QuizDto(-1L, "Sample Quiz", "description2", Map.of());
         TestUtils.createUserIfNotExists("testUser");
 
-        // Créer un quiz via la méthode performRequest
         Response<QuizDto> createResponse = performPostRequest(
                 BASE_URL, quiz, QuizDto.class);
 
-        // Vérifier la réponse de la création du quiz
         assertEquals(201, createResponse.status(), "Le statut de la création doit être 201");
         String location = createResponse.headers().get("Location");
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
 
-        // Extraire l'ID du quiz depuis l'URL "Location"
         long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
 
-        // Effectuer la requête GET pour récupérer le quiz par ID via performRequest
         Response<QuizResponseDto> getResponse = performGetRequest(
                 BASE_URL + "/" + quizId, QuizResponseDto.class);
 
-        // Vérifier les valeurs retournées par la requête GET
         QuizResponseDto retrievedQuiz = getResponse.body();
         assertEquals("Sample Quiz", retrievedQuiz.title(), "Le titre du quiz doit être 'Sample Quiz'.");
         assertNull(retrievedQuiz.description(), "La description du quiz ne doit pas exister.");
@@ -143,11 +155,9 @@ class QuizControllerTest {
         QuizDto quiz = new QuizDto(-1L, "Old title", "description3", Map.of());
         TestUtils.createUserIfNotExists("testUser");
 
-        // Créer un quiz via la méthode performRequest
         Response<QuizDto> createResponse = performPostRequest(
                 BASE_URL, quiz, QuizDto.class);
 
-        // Vérifier la réponse de la création du quiz
         assertEquals(201, createResponse.status(), "Le statut de la création doit être 201");
         String location = createResponse.headers().get("Location");
         assertNotNull(location, "L'URL Location ne doit pas être nulle.");
@@ -155,25 +165,20 @@ class QuizControllerTest {
         // Extraire l'ID du quiz depuis l'URL "Location"
         long quizId = Long.parseLong(location.substring(location.lastIndexOf("/") + 1));
 
-        // Créer une demande de mise à jour de titre
         PatchQuizTitleRequestDTO patchRequest = PatchQuizTitleRequestDTO.builder()
                 .op("replace")
                 .path("/title")
                 .value("New Title")
                 .build();
 
-        // Effectuer le PATCH via performRequest
         Response<Void> patchResponse = performPatchRequest(
                 BASE_URL + "/" + quizId, patchRequest,Void.class);
 
-        // Vérifier que le statut de la réponse est "No Content" (204)
         assertEquals(204, patchResponse.status(), "Le statut du PATCH doit être 204");
 
-        // Récupérer le quiz après la mise à jour
         Response<QuizResponseDto> getResponse = performGetRequest(
                 BASE_URL + "/" + quizId, QuizResponseDto.class);
 
-        // Vérifier la mise à jour du titre
         QuizResponseDto updatedQuiz = getResponse.body();
         assertEquals("New Title", updatedQuiz.title(), "Le titre du quiz doit être 'New Title'.");
     }
@@ -258,6 +263,17 @@ class QuizControllerTest {
         // Verify specific links
         assertTrue(response.body()._links().containsKey("create"), "Should contain create link");
         assertEquals("/api/quiz", response.body()._links().get("create"), "Create link should match expected URL");
+    }
+
+    @Test
+    void getQuizById_ShouldReturn404_WhenQuizDoesNotExist() throws Exception {
+        // Appel de l'API pour récupérer un quiz qui n'existe pas
+        Response<ExceptionsResponseDTO> response = TestUtils.performGetRequest(
+                BASE_URL + "/999", ExceptionsResponseDTO.class);
+
+        // Vérification du statut et du message d'erreur
+        assertEquals(404, response.status(), "Le statut doit être 404");
+        assertEquals("Quiz not found", response.body().message(), "Le message d'erreur doit être 'Quiz not found'");
     }
 
 /*    @Test
