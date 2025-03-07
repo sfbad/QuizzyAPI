@@ -22,9 +22,22 @@ public class Ping {
      * - Inclut des détails de base du système (actuellement l'état de la base de données)
      * - Aide à la surveillance et aux diagnostics rapides de l'application
      */
+
+    // Attribut pour simuler une erreur (pour les tests)
+    private boolean forceError = false;
+
+    // Méthode pour définir l'état de forceError (pour les tests)
+    public void setForceError(boolean forceError) {
+        this.forceError = forceError;
+    }
+
     @GetMapping
     public ResponseEntity<Object> ping() {
         try {
+            // Si forceError est true, simuler une erreur
+            if (forceError) {
+                throw new RuntimeException("Erreur simulée pour les tests");
+            }
             return ResponseEntity.ok().body(new PingResponse("OK", new PingDetails("OK")));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
